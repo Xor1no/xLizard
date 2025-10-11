@@ -440,7 +440,6 @@ def _is_in_disable_block(file_path, start_line, end_line):
 TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
-<html>
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -555,6 +554,47 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         border: 1px solid var(--glass-border);
         border-radius: var(--border-radius);
         box-shadow: var(--glass-shadow);
+    }
+
+    /* Scroll to Top Button */
+    .scroll-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .scroll-to-top.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .scroll-to-top:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .scroll-to-top:active {
+        transform: translateY(0);
     }
 
     .glass-header {
@@ -1182,6 +1222,14 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         .glass-nav {
             flex-direction: column;
         }
+        
+        .scroll-to-top {
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
     }
 
     @media (max-width: 480px) {
@@ -1207,12 +1255,25 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
             width: 100%;
             justify-content: space-between;
         }
+        
+        .scroll-to-top {
+            bottom: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top">
+        ↑
+    </button>
+
     <div class="container">
         <!-- Glass Header -->
         <div class="glass-header">
@@ -1613,6 +1674,24 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         // Set initial theme
         const savedTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(savedTheme);
+
+        // Scroll to Top Functionality
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
 
         // Tooltip system
         const tooltip = document.createElement('div');
