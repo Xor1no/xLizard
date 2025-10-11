@@ -446,40 +446,84 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     :root {
-        --glass-bg: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.15);
-        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        --glass-backdrop: blur(16px) saturate(180%);
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.2);
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        --error-gradient: linear-gradient(135deg, #ff057c 0%, #8d0b93 100%);
+        --danger-gradient: linear-gradient(135deg, #ff057c 0%, #8d0b93 100%);
         --text-primary: #ffffff;
         --text-secondary: rgba(255, 255, 255, 0.8);
         --text-tertiary: rgba(255, 255, 255, 0.6);
         --bg-primary: #0f0f1a;
         --bg-secondary: #1a1a2a;
-        --bg-tertiary: #252536;
-        --border-radius: 16px;
-        --border-radius-sm: 8px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --border-radius: 12px;
+        --border-radius-sm: 6px;
+        
+        /* Badge colors for dark theme */
+        --badge-safe-bg: rgba(67, 233, 123, 0.15);
+        --badge-safe-border: rgba(67, 233, 123, 0.4);
+        --badge-safe-text: #43e97b;
+        
+        --badge-warning-bg: rgba(250, 112, 154, 0.15);
+        --badge-warning-border: rgba(250, 112, 154, 0.4);
+        --badge-warning-text: #fa709a;
+        
+        --badge-danger-bg: rgba(255, 5, 124, 0.15);
+        --badge-danger-border: rgba(255, 5, 124, 0.4);
+        --badge-danger-text: #ff057c;
+        
+        --badge-info-bg: rgba(79, 172, 254, 0.15);
+        --badge-info-border: rgba(79, 172, 254, 0.4);
+        --badge-info-text: #4facfe;
+
+        /* Navigation colors for dark theme */
+        --nav-bg: rgba(255, 255, 255, 0.05);
+        --nav-border: rgba(255, 255, 255, 0.1);
+        --nav-text: rgba(255, 255, 255, 0.8);
+        --nav-active-bg: rgba(103, 126, 234, 0.2);
+        --nav-active-border: rgba(103, 126, 234, 0.4);
+        --nav-active-text: #ffffff;
     }
 
     [data-theme="light"] {
         --glass-bg: rgba(255, 255, 255, 0.8);
         --glass-border: rgba(0, 0, 0, 0.1);
-        --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        --glass-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
         --text-primary: #1a1a2a;
         --text-secondary: rgba(26, 26, 42, 0.8);
         --text-tertiary: rgba(26, 26, 42, 0.6);
         --bg-primary: #f8f9fa;
         --bg-secondary: #ffffff;
-        --bg-tertiary: #f1f3f5;
+        
+        /* Badge colors for light theme */
+        --badge-safe-bg: rgba(67, 233, 123, 0.15);
+        --badge-safe-border: rgba(67, 233, 123, 0.5);
+        --badge-safe-text: #27ae60;
+        
+        --badge-warning-bg: rgba(250, 112, 154, 0.15);
+        --badge-warning-border: rgba(250, 112, 154, 0.5);
+        --badge-warning-text: #e74c3c;
+        
+        --badge-danger-bg: rgba(255, 5, 124, 0.15);
+        --badge-danger-border: rgba(255, 5, 124, 0.5);
+        --badge-danger-text: #c0392b;
+        
+        --badge-info-bg: rgba(79, 172, 254, 0.15);
+        --badge-info-border: rgba(79, 172, 254, 0.5);
+        --badge-info-text: #2980b9;
+
+        /* Navigation colors for light theme */
+        --nav-bg: rgba(0, 0, 0, 0.05);
+        --nav-border: rgba(0, 0, 0, 0.1);
+        --nav-text: rgba(26, 26, 42, 0.8);
+        --nav-active-bg: rgba(103, 126, 234, 0.15);
+        --nav-active-border: rgba(103, 126, 234, 0.3);
+        --nav-active-text: #667eea;
     }
 
     * {
@@ -492,92 +536,39 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
         background: var(--bg-primary);
         color: var(--text-primary);
-        line-height: 1.6;
+        line-height: 1.5;
         min-height: 100vh;
         overflow-x: hidden;
-        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
-        transition: var(--transition);
-    }
-
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-            radial-gradient(circle at 20% 20%, rgba(103, 126, 234, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(247, 87, 108, 0.1) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: -1;
-        transition: var(--transition);
-    }
-
-    [data-theme="light"] body::before {
-        background: 
-            radial-gradient(circle at 20% 20%, rgba(103, 126, 234, 0.05) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(247, 87, 108, 0.05) 0%, transparent 50%);
+        transition: all 0.3s ease;
     }
 
     .container {
         max-width: 1400px;
         margin: 0 auto;
-        padding: 2rem;
-        min-height: 100vh;
+        padding: 1rem;
     }
 
-    /* Glass Header */
-    .glass-header {
+    /* Glass Elements */
+    .glass-header, .glass-nav, .glass-card, .metric-card, .chart-container, .directory-header, .file-card, .glass-search, .glass-footer {
         background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
+        backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
         border-radius: var(--border-radius);
-        padding: 2.5rem;
-        margin-bottom: 2rem;
         box-shadow: var(--glass-shadow);
+    }
+
+    .glass-header {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
         position: relative;
         overflow: hidden;
-        transition: var(--transition);
-    }
-
-    .glass-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: var(--primary-gradient);
-        opacity: 0.1;
-        z-index: -1;
-        animation: rotate 20s linear infinite;
-    }
-
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .function-disabled {
-        background: linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 140, 0, 0.2) 100%) !important;
-        border-left: 4px solid #ff8c00;
-    }
-
-    .function-disabled:hover td {
-        background: linear-gradient(135deg, rgba(255, 165, 0, 0.15) 0%, rgba(255, 140, 0, 0.25) 100%) !important;
-    }
-
-    .metric-value-warning {
-        color: #ff8c00 !important;
-        font-weight: 600;
     }
 
     .header-content {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        gap: 2rem;
+        gap: 1rem;
         position: relative;
         z-index: 2;
     }
@@ -590,43 +581,41 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         display: flex;
         align-items: center;
         gap: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
 
     .logo {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
         background: var(--primary-gradient);
-        border-radius: 12px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 1.5rem;
         font-weight: bold;
         color: white;
-        box-shadow: var(--glass-shadow);
     }
 
     .report-title {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         font-weight: 700;
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.5rem;
-        line-height: 1.1;
+        margin-bottom: 0.25rem;
     }
 
     .report-subtitle {
-        font-size: 1.2rem;
+        font-size: 1rem;
         color: var(--text-secondary);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .header-meta {
         display: flex;
-        gap: 1.5rem;
+        gap: 1rem;
         flex-wrap: wrap;
     }
 
@@ -635,383 +624,226 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         align-items: center;
         gap: 0.5rem;
         color: var(--text-secondary);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .header-actions {
         display: flex;
-        gap: 1rem;
+        gap: 0.5rem;
         align-items: center;
     }
 
-    /* Glass Button */
     .glass-button {
         background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
         border: 1px solid var(--glass-border);
         color: var(--text-primary);
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1rem;
         border-radius: var(--border-radius-sm);
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 500;
-        transition: var(--transition);
-        box-shadow: var(--glass-shadow);
+        transition: all 0.2s ease;
     }
 
     .glass-button:hover {
-        background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        background: rgba(255, 255, 255, 0.1);
     }
 
-    /* Glass Navigation */
+    /* Navigation */
     .glass-nav {
         display: flex;
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 0.75rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--glass-shadow);
-        position: relative;
-        overflow: hidden;
-        gap: 0.75rem;
-    }
-
-    .glass-nav::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--primary-gradient);
-        opacity: 0.1;
-        z-index: -1;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+        background: var(--nav-bg);
+        border: 1px solid var(--nav-border);
     }
 
     .nav-item {
-        padding: 1rem 2rem;
+        padding: 0.75rem 1.5rem;
         cursor: pointer;
         border-radius: var(--border-radius-sm);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        color: var(--text-secondary);
+        transition: all 0.2s ease;
+        color: var(--nav-text);
         font-weight: 500;
-        position: relative;
-        z-index: 2;
         border: none;
         background: none;
         flex: 1;
         text-align: center;
-        margin: 0 0.25rem;
+        border: 1px solid transparent;
     }
 
     .nav-item:hover {
         color: var(--text-primary);
         background: rgba(255, 255, 255, 0.05);
-        transform: translateY(-1px);
+        border-color: var(--nav-border);
     }
 
     .nav-item.active {
-        color: var(--text-primary);
-        background: var(--glass-bg);
-        box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.4);
+        color: var(--nav-active-text);
+        background: var(--nav-active-bg);
         font-weight: 600;
-        transform: translateY(-2px);
+        border-color: var(--nav-active-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .nav-item.active::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: var(--primary-gradient);
-        border-radius: var(--border-radius-sm);
-        z-index: -1;
-        opacity: 0.3;
-        animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 0.5; }
-    }
-
-    /* Glass Cards */
+    /* Cards */
     .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--glass-shadow);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .glass-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--primary-gradient);
-        opacity: 0.05;
-        z-index: -1;
-    }
-
-    .glass-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.4);
-        border-color: rgba(255, 255, 255, 0.2);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
     }
 
     .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
         border-bottom: 1px solid var(--glass-border);
     }
 
     .card-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 600;
         color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .card-title::before {
-        content: '';
-        width: 8px;
-        height: 8px;
-        background: var(--primary-gradient);
-        border-radius: 50%;
-        display: inline-block;
     }
 
     /* Metrics Grid */
     .metrics-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
 
     .metric-card {
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
         background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
         border: 1px solid var(--glass-border);
         border-radius: var(--border-radius);
-        padding: 2rem;
-        text-align: center;
-        transition: var(--transition);
         box-shadow: var(--glass-shadow);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--primary-gradient);
-        opacity: 0.05;
-        z-index: -1;
     }
 
     .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
     }
 
     .metric-value {
-        font-size: 3rem;
+        font-size: 2rem;
         font-weight: 700;
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin: 1rem 0;
+        margin: 0.5rem 0;
         line-height: 1;
     }
 
     .metric-label {
-        font-size: 1rem;
+        font-size: 0.9rem;
         color: var(--text-secondary);
-        margin: 0;
+        font-weight: 500;
     }
 
-    /* Charts Grid */
+    /* Charts */
     .charts-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
 
     .chart-container {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        box-shadow: var(--glass-shadow);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .chart-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--primary-gradient);
-        opacity: 0.05;
-        z-index: -1;
-    }
-
-    .chart-container:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.4);
+        padding: 1.5rem;
+        transition: all 0.2s ease;
     }
 
     .chart-title {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .chart-title::before {
-        content: '';
-        width: 6px;
-        height: 6px;
-        background: var(--secondary-gradient);
-        border-radius: 50%;
-        display: inline-block;
+        margin-bottom: 1rem;
     }
 
     .chart-wrapper {
         position: relative;
-        height: 300px;
+        height: 250px;
         width: 100%;
     }
 
     /* Directory Groups */
     .directory-group {
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.5rem;
     }
 
     .directory-header {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 1.5rem 2rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--glass-shadow);
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
     .directory-name {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .directory-name::before {
-        content: '📁';
-        font-size: 1.1rem;
     }
 
     .directory-count {
         background: var(--primary-gradient);
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
         font-weight: 600;
         color: white;
     }
 
     /* File Cards */
     .file-card {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         overflow: hidden;
-        box-shadow: var(--glass-shadow);
-        transition: var(--transition);
-    }
-
-    .file-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.4);
-        border-color: rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
     }
 
     .file-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        padding: 1.5rem 2rem;
+        padding: 1rem 1.5rem;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.2s ease;
         background: rgba(255, 255, 255, 0.02);
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .file-header:hover {
         background: rgba(255, 255, 255, 0.05);
     }
 
-    .file-header.expanded {
-        background: rgba(255, 255, 255, 0.08);
-        border-bottom: 1px solid var(--glass-border);
-    }
-
     .file-title {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
         width: 100%;
-        min-width: 0;
-        order: 1;
     }
 
     .file-icon {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
         background: var(--primary-gradient);
         mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>');
         -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>');
@@ -1032,67 +864,88 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
     .file-metrics {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.5rem;
         width: 100%;
         flex-wrap: wrap;
-        order: 2;
     }
 
-    /* Glass Badges */
+    /* Badges */
     .glass-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
         font-weight: 600;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        backdrop-filter: var(--glass-backdrop);
-        transition: var(--transition);
+        transition: all 0.2s ease;
         white-space: nowrap;
+        position: relative;
+        border: 1px solid;
+        backdrop-filter: none;
     }
 
     .glass-badge.safe {
-        background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-        border-color: rgba(67, 233, 123, 0.3);
-        color: #43e97b;
+        background: var(--badge-safe-bg);
+        border-color: var(--badge-safe-border);
+        color: var(--badge-safe-text);
     }
 
     .glass-badge.warning {
-        background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-        border-color: rgba(250, 112, 154, 0.3);
-        color: #fa709a;
+        background: var(--badge-warning-bg);
+        border-color: var(--badge-warning-border);
+        color: var(--badge-warning-text);
     }
 
     .glass-badge.danger {
-        background: linear-gradient(135deg, rgba(255, 5, 124, 0.2) 0%, rgba(141, 11, 147, 0.2) 100%);
-        border-color: rgba(255, 5, 124, 0.3);
-        color: #ff057c;
+        background: var(--badge-danger-bg);
+        border-color: var(--badge-danger-border);
+        color: var(--badge-danger-text);
+    }
+
+    .glass-badge.info {
+        background: var(--badge-info-bg);
+        border-color: var(--badge-info-border);
+        color: var(--badge-info-text);
+    }
+
+    .glass-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .badge-value {
+        font-weight: 700;
+        margin-right: 0.25rem;
+    }
+
+    .badge-label {
+        font-size: 0.75rem;
+        opacity: 0.9;
     }
 
     .file-content {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: max-height 0.3s ease;
         background: rgba(255, 255, 255, 0.02);
     }
 
     .file-content.expanded {
-        max-height: 5000px;
+        max-height: 2000px;
     }
 
     .file-table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 0.9rem;
     }
 
     .file-table th {
         text-align: left;
-        padding: 1.5rem 2rem;
+        padding: 1rem 1.5rem;
         font-weight: 600;
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         background: rgba(255, 255, 255, 0.05);
@@ -1100,30 +953,23 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
     }
 
     .file-table td {
-        padding: 1.25rem 2rem;
+        padding: 0.75rem 1.5rem;
         border-bottom: 1px solid var(--glass-border);
-        transition: var(--transition);
     }
 
     .file-table tr:last-child td {
         border-bottom: none;
     }
 
-    .file-table tr:hover td {
-        background: rgba(255, 255, 255, 0.03);
-    }
-
     .function-name {
-        font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+        font-family: 'Fira Code', 'Consolas', monospace;
         color: var(--text-primary);
-        font-size: 0.95rem;
-        font-weight: 500;
+        font-size: 0.9rem;
     }
 
     .metric-value-high {
         color: #ff057c;
         font-weight: 600;
-        animation: pulseText 2s ease-in-out infinite;
     }
 
     .metric-value-low {
@@ -1131,16 +977,21 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         font-weight: 500;
     }
 
-    @keyframes pulseText {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
+    .metric-value-warning {
+        color: #fa709a;
+        font-weight: 600;
+    }
+
+    .function-disabled {
+        background: rgba(255, 165, 0, 0.05);
+        border-left: 3px solid #ff8c00;
     }
 
     /* Tooltips */
     .tooltip-icon {
         cursor: pointer;
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1148,11 +999,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         color: var(--text-secondary);
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
-        margin-left: 0.5rem;
-        transition: var(--transition);
-        backdrop-filter: var(--glass-backdrop);
+        margin-left: 0.25rem;
+        transition: all 0.2s ease;
     }
 
     .tooltip-icon:hover {
@@ -1165,19 +1015,19 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         position: absolute;
         z-index: 1000;
         background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
+        backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
         color: var(--text-primary);
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1rem;
         border-radius: var(--border-radius-sm);
-        font-size: 0.9rem;
-        max-width: 300px;
+        font-size: 0.8rem;
+        max-width: 250px;
         box-shadow: var(--glass-shadow);
         opacity: 0;
         transform: translateY(10px);
-        transition: var(--transition);
+        transition: all 0.2s ease;
         pointer-events: none;
-        line-height: 1.5;
+        line-height: 1.4;
     }
 
     .custom-tooltip.visible {
@@ -1185,42 +1035,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         transform: translateY(0);
     }
 
-    /* Footer */
-    .glass-footer {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-top: 3rem;
-        text-align: center;
-        color: var(--text-secondary);
-        box-shadow: var(--glass-shadow);
-    }
-
-    /* Search Styles */
+    /* Search */
     .glass-search {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-backdrop);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--border-radius);
         padding: 1rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--glass-shadow);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .glass-search::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--primary-gradient);
-        opacity: 0.05;
-        z-index: -1;
+        margin-bottom: 1rem;
     }
 
     .search-container {
@@ -1238,26 +1056,20 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
     .search-input {
         width: 100%;
-        padding: 12px 40px 12px 40px;
+        padding: 0.75rem 2.5rem;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid var(--glass-border);
         border-radius: var(--border-radius-sm);
         color: var(--text-primary);
         font-family: inherit;
-        font-size: 1rem;
-        backdrop-filter: var(--glass-backdrop);
-        transition: var(--transition);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
     }
 
     .search-input:focus {
         outline: none;
         border-color: rgba(103, 126, 234, 0.5);
         background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
-    }
-
-    .search-input::placeholder {
-        color: var(--text-tertiary);
     }
 
     .clear-search {
@@ -1269,13 +1081,6 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         cursor: pointer;
         padding: 4px;
         border-radius: 50%;
-        transition: var(--transition);
-        z-index: 2;
-    }
-
-    .clear-search:hover {
-        color: var(--text-primary);
-        background: rgba(255, 255, 255, 0.1);
     }
 
     /* Search highlight */
@@ -1296,146 +1101,115 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         50% { background-color: rgba(255, 215, 0, 0.3); }
     }
 
+    /* Footer */
+    .glass-footer {
+        padding: 1.5rem;
+        margin-top: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
     .glass-footer a {
         color: var(--text-primary);
         text-decoration: none;
         font-weight: 500;
-        transition: var(--transition);
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
-    .glass-footer a:hover {
-        text-decoration: underline;
-    }
-
     /* Tab Content */
     .tab-content {
         display: none;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .tab-content.active {
         display: block;
-        opacity: 1;
-        transform: translateY(0);
+        animation: fadeIn 0.3s ease;
     }
 
     @keyframes fadeIn {
-        from { 
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
-    /* Responsive Design */
-    @media (max-width: 1200px) {
-        .charts-grid {
-            grid-template-columns: 1fr;
+    /* Performance Optimizations */
+    .chart-container canvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0.5rem;
+        }
+        
+        .glass-header {
+            padding: 1rem;
         }
         
         .header-content {
             flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .header-actions {
-            justify-content: center;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .container {
-            padding: 1rem;
-        }
-        
-        .glass-header {
-            padding: 2rem 1.5rem;
         }
         
         .report-title {
-            font-size: 2rem;
+            font-size: 1.5rem;
         }
         
         .metrics-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .charts-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .chart-wrapper {
+            height: 200px;
         }
         
         .file-header {
             flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
+            gap: 0.5rem;
         }
         
         .file-metrics {
-            margin-left: 0;
-            width: 100%;
             justify-content: flex-start;
         }
         
         .glass-nav {
             flex-direction: column;
-            padding: 0.5rem;
-            gap: 0.5rem;
-        }
-        
-        .nav-item {
-            padding: 0.75rem 1rem;
-            margin: 0.25rem 0;
         }
     }
 
     @media (max-width: 480px) {
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+        
         .file-table {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         
         .file-table th,
         .file-table td {
-            padding: 1rem 1.25rem;
+            padding: 0.5rem 1rem;
         }
         
-        .metric-value {
-            font-size: 2.5rem;
-        }
-        
-        .logo {
-            width: 50px;
-            height: 50px;
-            font-size: 1.5rem;
-        }
-        
-        .report-title {
-            font-size: 1.8rem;
+        .file-metrics {
+            flex-direction: column;
+            align-items: flex-start;
         }
         
         .glass-badge {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
+            width: 100%;
+            justify-content: space-between;
         }
     }
-
-    /* Animation for glass elements */
-    @keyframes glassGlow {
-        0%, 100% { opacity: 0.1; }
-        50% { opacity: 0.2; }
-    }
-
-    .glass-card:hover::before,
-    .metric-card:hover::before,
-    .chart-container:hover::before {
-        animation: glassGlow 2s ease-in-out infinite;
-    }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -1448,13 +1222,13 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                         <div class="logo">🦎</div>
                         <h1 class="report-title">{{ title }}</h1>
                     </div>
-                    <p class="report-subtitle">Comprehensive code quality analysis with advanced metrics visualization</p>
+                    <p class="report-subtitle">Code quality analysis report</p>
                     <div class="header-meta">
                         <div class="meta-item">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
-                            {{ total_files }} files analyzed
+                            {{ total_files }} files
                         </div>
                         <div class="meta-item">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -1467,25 +1241,26 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                 </div>
                 <div class="header-actions">
                     <button class="glass-button" id="themeToggle">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
                         </svg>
-                        Toggle Theme
+                        Theme
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Glass Navigation -->
+        <!-- Navigation -->
         <div class="glass-nav">
             <button class="nav-item active" data-tab="dashboardTab">Dashboard</button>
-            <button class="nav-item" data-tab="filesTab">File Analysis</button>
-            <button class="nav-item" data-tab="advancedTab">Advanced Metrics</button>
+            <button class="nav-item" data-tab="filesTab">Files</button>
+            <button class="nav-item" data-tab="advancedTab">Advanced</button>
         </div>
 
+        <!-- Search -->
         <div class="glass-search">
             <div class="search-container">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
                 <input type="text" id="searchInput" placeholder="Search files and functions..." class="search-input">
@@ -1499,7 +1274,46 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
         <!-- Dashboard Tab -->
         <div class="tab-content active" id="dashboardTab">
-            <!-- Charts Grid -->
+            <!-- Metrics Cards -->
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3 class="card-title">Project Overview</h3>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-value">{{ avg_complexity|round(1) }}</div>
+                        <div class="metric-label">Average Complexity</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">💬</div>
+                        <div class="metric-value">{{ avg_comments|round(1) }}%</div>
+                        <div class="metric-label">Average Comments</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">📏</div>
+                        <div class="metric-value">{{ avg_depth|round(1) }}</div>
+                        <div class="metric-label">Average Depth</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-value">{{ total_functions }}</div>
+                        <div class="metric-label">Total Functions</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🔧</div>
+                        <div class="metric-value">{{ total_disabled_functions }}</div>
+                        <div class="metric-label">Disabled Functions</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⚠️</div>
+                        <div class="metric-value">{{ problem_files }}</div>
+                        <div class="metric-label">Problem Files</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
             <div class="charts-grid">
                 <div class="chart-container">
                     <div class="chart-title">Complexity Distribution</div>
@@ -1508,7 +1322,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     </div>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Metrics Comparison</div>
+                    <div class="chart-title">Metrics Overview</div>
                     <div class="chart-wrapper">
                         <canvas id="metricsChart"></canvas>
                     </div>
@@ -1520,7 +1334,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     </div>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">Depth vs Pointers Analysis</div>
+                    <div class="chart-title">Depth vs Pointers</div>
                     <div class="chart-wrapper">
                         <canvas id="depthPointersChart"></canvas>
                     </div>
@@ -1528,34 +1342,8 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
             </div>
         </div>
 
-        <!-- Files Analysis Tab -->
+        <!-- Files Tab -->
         <div class="tab-content" id="filesTab">
-            <!-- Code Quality Overview -->
-            <div class="glass-card">
-                <div class="card-header">
-                    <h3 class="card-title">Code Quality Overview</h3>
-                </div>
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-label">Average Complexity</div>
-                        <div class="metric-value">{{ avg_complexity|round(1) }}</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Average Comments</div>
-                        <div class="metric-value">{{ avg_comments|round(1) }}%</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Average Depth</div>
-                        <div class="metric-value">{{ avg_depth|round(1) }}</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Total Functions</div>
-                        <div class="metric-value">{{ total_functions }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project Files -->
             <div class="glass-card">
                 <div class="card-header">
                     <h3 class="card-title">Project Files</h3>
@@ -1563,10 +1351,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                 </div>
                 
                 {% for dirname, files in dir_groups.items() %}
-                <div class="directory-group" id="dir-{{ dirname }}">
+                <div class="directory-group">
                     <div class="directory-header">
                         <h3 class="directory-name">{{ dirname }}</h3>
-                        <div class="directory-count">{{ files|length }} file{{ 's' if files|length != 1 }}</div>
+                        <div class="directory-count">{{ files|length }} files</div>
                     </div>
                     
                     {% for file in files %}
@@ -1577,38 +1365,45 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                 <h4 class="file-name">{{ file.basename }}</h4>
                             </div>
                             <div class="file-metrics">
-                                <div class="glass-badge {% if file.max_complexity <= thresholds['cyclomatic_complexity']*0.5 %}safe{% elif file.max_complexity <= thresholds['cyclomatic_complexity'] %}warning{% else %}danger{% endif %}">
-                                    Max CC: {{ file.max_complexity }}
-                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds['cyclomatic_complexity']*0.5)|round }} (safe), ≤{{ thresholds['cyclomatic_complexity'] }} (warning), >{{ thresholds['cyclomatic_complexity'] }} (danger)">?</div>
+                                <div class="glass-badge {% if file.max_complexity <= thresholds.cyclomatic_complexity*0.5 %}safe{% elif file.max_complexity <= thresholds.cyclomatic_complexity %}warning{% else %}danger{% endif %}">
+                                    <span class="badge-value">{{ file.max_complexity }}</span>
+                                    <span class="badge-label">Max CC</span>
+                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds.cyclomatic_complexity*0.5)|round }} (safe), ≤{{ thresholds.cyclomatic_complexity }} (warning), >{{ thresholds.cyclomatic_complexity }} (danger)">?</div>
                                 </div>
-                                <div class="glass-badge {% if file.active_functions_count <= thresholds['function_count']*0.5 %}safe{% elif file.active_functions_count <= thresholds['function_count'] %}warning{% else %}danger{% endif %}">
-                                    Active Funcs: {{ file.active_functions_count }}
-                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds['function_count']*0.5)|round }} (safe), ≤{{ thresholds['function_count'] }} (warning), >{{ thresholds['function_count'] }} (danger)">?</div>
+                                <div class="glass-badge {% if file.active_functions_count <= thresholds.function_count*0.5 %}safe{% elif file.active_functions_count <= thresholds.function_count %}warning{% else %}danger{% endif %}">
+                                    <span class="badge-value">{{ file.active_functions_count }}</span>
+                                    <span class="badge-label">Active Funcs</span>
+                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds.function_count*0.5)|round }} (safe), ≤{{ thresholds.function_count }} (warning), >{{ thresholds.function_count }} (danger)">?</div>
                                 </div>
                                 <div class="glass-badge {% if file.disabled_functions_count > 0 %}warning{% else %}safe{% endif %}">
-                                    DSB Func: {{ file.disabled_functions_count }}
+                                    <span class="badge-value">{{ file.disabled_functions_count }}</span>
+                                    <span class="badge-label">DSB Func</span>
                                     <div class="tooltip-icon" data-tooltip="Functions disabled by XLIZARD_DISABLE directive">?</div>
                                 </div>
-                                <div class="glass-badge {% if file.max_block_depth <= thresholds['max_block_depth']*0.7 %}safe{% elif file.max_block_depth <= thresholds['max_block_depth'] %}warning{% else %}danger{% endif %}">
-                                   Max Depth: {{ file.max_block_depth }}
-                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds['max_block_depth']*0.7)|round }} (safe), ≤{{ thresholds['max_block_depth'] }} (warning), >{{ thresholds['max_block_depth'] }} (danger)">?</div>
+                                <div class="glass-badge {% if file.max_block_depth <= thresholds.max_block_depth*0.7 %}safe{% elif file.max_block_depth <= thresholds.max_block_depth %}warning{% else %}danger{% endif %}">
+                                    <span class="badge-value">{{ file.max_block_depth }}</span>
+                                    <span class="badge-label">Max Depth</span>
+                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds.max_block_depth*0.7)|round }} (safe), ≤{{ thresholds.max_block_depth }} (warning), >{{ thresholds.max_block_depth }} (danger)">?</div>
                                 </div>
-                                <div class="glass-badge {% if file.pointer_operations <= thresholds['pointer_operations']*0.5 %}safe{% elif file.pointer_operations <= thresholds['pointer_operations'] %}warning{% else %}danger{% endif %}">
-                                  Max  Ptr Ops: {{ file.pointer_operations }}
-                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds['pointer_operations']*0.5)|round }} (safe), ≤{{ thresholds['pointer_operations'] }} (warning), >{{ thresholds['pointer_operations'] }} (danger)">?</div>
+                                <div class="glass-badge {% if file.pointer_operations <= thresholds.pointer_operations*0.5 %}safe{% elif file.pointer_operations <= thresholds.pointer_operations %}warning{% else %}danger{% endif %}">
+                                    <span class="badge-value">{{ file.pointer_operations }}</span>
+                                    <span class="badge-label">Ptr Ops</span>
+                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds.pointer_operations*0.5)|round }} (safe), ≤{{ thresholds.pointer_operations }} (warning), >{{ thresholds.pointer_operations }} (danger)">?</div>
                                 </div>
-                                <div class="glass-badge {% if file.preprocessor_directives <= thresholds['preprocessor_directives']*0.5 %}safe{% elif file.preprocessor_directives <= thresholds['preprocessor_directives'] %}warning{% else %}danger{% endif %}">
-                                   Max PP Directives: {{ file.preprocessor_directives }}
-                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds['preprocessor_directives']*0.5)|round }} (safe), ≤{{ thresholds['preprocessor_directives'] }} (warning), >{{ thresholds['preprocessor_directives'] }} (danger)">?</div>
+                                <div class="glass-badge {% if file.preprocessor_directives <= thresholds.preprocessor_directives*0.5 %}safe{% elif file.preprocessor_directives <= thresholds.preprocessor_directives %}warning{% else %}danger{% endif %}">
+                                    <span class="badge-value">{{ file.preprocessor_directives }}</span>
+                                    <span class="badge-label">PP Directives</span>
+                                    <div class="tooltip-icon" data-tooltip="Thresholds: ≤{{ (thresholds.preprocessor_directives*0.5)|round }} (safe), ≤{{ thresholds.preprocessor_directives }} (warning), >{{ thresholds.preprocessor_directives }} (danger)">?</div>
                                 </div>
-                                <div class="glass-badge">
-                                    Comments: {{ file.comment_percentage|round(1) }}%
+                                <div class="glass-badge info">
+                                    <span class="badge-value">{{ file.comment_percentage|round(1) }}%</span>
+                                    <span class="badge-label">Comments</span>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="file-content">
-                            {% if file.functions|length > 0 %}
+                            {% if file.functions %}
                             <table class="file-table">
                                 <thead>
                                     <tr>
@@ -1639,31 +1434,28 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                             <div class="tooltip-icon" data-tooltip="Function analysis disabled by XLIZARD_DISABLE directive">🟠</div>
                                             {% endif %}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.cyclomatic_complexity > thresholds['cyclomatic_complexity'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.cyclomatic_complexity > thresholds.cyclomatic_complexity %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.cyclomatic_complexity }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.nloc > thresholds['nloc'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.nloc > thresholds.nloc %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.nloc }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.token_count > thresholds['token_count'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.token_count > thresholds.token_count %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.token_count }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.parameter_count > thresholds['parameter_count'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.parameter_count > thresholds.parameter_count %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.parameter_count }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.max_depth > thresholds['max_block_depth'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.max_depth > thresholds.max_block_depth %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.max_depth }}
                                         </td>
                                     </tr>
-                                {% endfor %}
+                                    {% endfor %}
                                 </tbody>
                             </table>
                             {% else %}
-                            <div style="padding: 3rem; text-align: center; color: var(--text-secondary);">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="opacity: 0.5; margin-bottom: 1rem;">
-                                    <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
-                                </svg>
-                                <p>No functions found in this file</p>
+                            <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                                No functions found
                             </div>
                             {% endif %}
                         </div>
@@ -1674,42 +1466,16 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
             </div>
         </div>
 
-        <!-- Advanced Metrics Tab -->
+        <!-- Advanced Tab -->
         <div class="tab-content" id="advancedTab">
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">Complexity vs Lines of Code</div>
-                    <div class="chart-wrapper">
-                        <canvas id="complexityNlocChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="chart-container">
-                    <div class="chart-title">Code Composition</div>
-                    <div class="chart-wrapper">
-                        <canvas id="codeCompositionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
             <div class="glass-card">
                 <div class="card-header">
-                    <h3 class="card-title">Directory Complexity Heatmap</h3>
-                </div>
-                <div class="chart-wrapper">
-                    <div id="heatmapChart" style="height: 400px;"></div>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div class="card-header">
-                    <h3 class="card-title">Top 5 Most Complex Functions</h3>
+                    <h3 class="card-title">Top Complex Functions</h3>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="file-table">
                         <thead>
                             <tr>
-                                <th>Rank</th>
                                 <th>Function</th>
                                 <th>File</th>
                                 <th>Complexity</th>
@@ -1719,7 +1485,6 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                         <tbody>
                             {% for func in top_complex_functions %}
                             <tr>
-                                <td>{{ loop.index }}</td>
                                 <td class="function-name">{{ func.name }}</td>
                                 <td>{{ func.file }}</td>
                                 <td class="metric-value-high">{{ func.complexity }}</td>
@@ -1733,59 +1498,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
             <div class="glass-card">
                 <div class="card-header">
-                    <h3 class="card-title">Files with Lowest Comments</h3>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="file-table">
-                        <thead>
-                            <tr>
-                                <th>File</th>
-                                <th>Comment %</th>
-                                <th>Complexity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for file in min_comments_files %}
-                            <tr>
-                                <td>{{ file.basename }}</td>
-                                <td class="metric-value-high">{{ file.comment_percentage|round(1) }}%</td>
-                                <td>{{ file.max_complexity }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div class="card-header">
-                    <h3 class="card-title">Files with Highest Comments</h3>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="file-table">
-                        <thead>
-                            <tr>
-                                <th>File</th>
-                                <th>Comment %</th>
-                                <th>Complexity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for file in max_comments_files %}
-                            <tr>
-                                <td>{{ file.basename }}</td>
-                                <td class="metric-value-low">{{ file.comment_percentage|round(1) }}%</td>
-                                <td>{{ file.max_complexity }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div class="card-header">
-                    <h3 class="card-title">Average Complexity by Directory</h3>
+                    <h3 class="card-title">Directory Complexity</h3>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="file-table">
@@ -1800,7 +1513,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                             {% for dir in dir_complexity_stats %}
                             <tr>
                                 <td>{{ dir.name }}</td>
-                                <td class="{% if dir.avg_complexity > thresholds['cyclomatic_complexity'] %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                <td class="{% if dir.avg_complexity > thresholds.cyclomatic_complexity %}metric-value-high{% else %}metric-value-low{% endif %}">
                                     {{ dir.avg_complexity|round(1) }}
                                 </td>
                                 <td>{{ dir.file_count }}</td>
@@ -1810,52 +1523,96 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     </table>
                 </div>
             </div>
-
-            <div class="glass-card">
-                <div class="card-header">
-                    <h3 class="card-title">Code Hotspots Analysis</h3>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                        {% for file in file_list %}
-                            {% if file.max_complexity > thresholds['cyclomatic_complexity'] and file.comment_percentage < thresholds['comment_percentage']*0.5 %}
-                            <div class="glass-badge danger">
-                                {{ file.basename }} (CC: {{ file.max_complexity }}, Comments: {{ file.comment_percentage|round(1) }}%)
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="glass-footer">
-            Generated on {{ date }} by <a href="http://www.xlizard.ws/" target="_blank">xlizard</a> with SourceMonitor metrics
+            Generated on {{ date }} by <a href="http://www.xlizard.ws/" target="_blank">xlizard</a>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize dashboard charts immediately
-        initDashboardCharts();
-        window.chartsInitialized = true;
+    // Global chart instances storage
+    const chartInstances = {
+        complexityChart: null,
+        metricsChart: null,
+        commentsChart: null,
+        depthPointersChart: null
+    };
 
-        // Theme toggle functionality
+    // Function to update chart colors based on theme
+    function updateChartColors() {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#ffffff' : '#1a1a2a';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const fontFamily = 'Inter, sans-serif';
+
+        // Update all existing charts
+        Object.entries(chartInstances).forEach(([chartName, chart]) => {
+            if (chart) {
+                // Update scales colors
+                if (chart.options.scales) {
+                    Object.values(chart.options.scales).forEach(scale => {
+                        if (scale.ticks) {
+                            scale.ticks.color = textColor;
+                        }
+                        if (scale.grid) {
+                            scale.grid.color = gridColor;
+                        }
+                        if (scale.title) {
+                            scale.title.color = textColor;
+                        }
+                    });
+                }
+
+                // Update legend colors
+                if (chart.options.plugins && chart.options.plugins.legend) {
+                    chart.options.plugins.legend.labels.color = textColor;
+                }
+
+                // Update tooltip colors
+                if (chart.options.plugins && chart.options.plugins.tooltip) {
+                    chart.options.plugins.tooltip.bodyColor = textColor;
+                    chart.options.plugins.tooltip.titleColor = textColor;
+                }
+
+                chart.update('none'); // Update without animation for better performance
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts only when needed
+        let chartsInitialized = {
+            dashboard: false,
+            advanced: false
+        };
+
+        // Theme toggle with immediate update
         const themeToggle = document.getElementById('themeToggle');
+        
+        function applyTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            // Force CSS repaint
+            document.body.style.opacity = '0.99';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 10);
+            
+            // Update charts immediately with proper theme colors
+            updateChartColors();
+        }
+
         themeToggle.addEventListener('click', function() {
             const currentTheme = document.body.getAttribute('data-theme') || 'dark';
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            // Update charts with new theme
-            updateChartsTheme();
+            applyTheme(newTheme);
         });
 
         // Set initial theme
         const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.setAttribute('data-theme', savedTheme);
+        applyTheme(savedTheme);
 
         // Tooltip system
         const tooltip = document.createElement('div');
@@ -1878,39 +1635,43 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
             });
         });
 
-        // Navigation system
+        // Navigation
         const navItems = document.querySelectorAll('.nav-item');
         const tabContents = document.querySelectorAll('.tab-content');
 
         function switchTab(tabId) {
-            // Remove active class from all nav items and tabs
             navItems.forEach(nav => nav.classList.remove('active'));
             tabContents.forEach(tab => tab.classList.remove('active'));
             
-            // Add active class to clicked item
             document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
             document.getElementById(tabId).classList.add('active');
             
-            // Initialize charts if needed
-            if (tabId === 'advancedTab' && !window.advancedChartsInitialized) {
-                setTimeout(initAdvancedCharts, 100);
-                window.advancedChartsInitialized = true;
+            // Initialize charts for active tab
+            if (tabId === 'dashboardTab' && !chartsInitialized.dashboard) {
+                initDashboardCharts();
+                chartsInitialized.dashboard = true;
+            } else if (tabId === 'advancedTab' && !chartsInitialized.advanced) {
+                initAdvancedCharts();
+                chartsInitialized.advanced = true;
             }
         }
 
         navItems.forEach(item => {
             item.addEventListener('click', function() {
-                const tabId = this.getAttribute('data-tab');
-                switchTab(tabId);
+                switchTab(this.getAttribute('data-tab'));
             });
         });
+
+        // Initialize dashboard charts on first load
+        initDashboardCharts();
+        chartsInitialized.dashboard = true;
 
         // Search functionality
         const searchInput = document.getElementById('searchInput');
         const clearSearch = document.getElementById('clearSearch');
 
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
+        function performSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
             clearSearch.style.display = searchTerm ? 'block' : 'none';
             
             // Remove previous highlights
@@ -1928,7 +1689,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     if (filename.includes(searchTerm)) {
                         const highlighted = element.textContent.replace(
                             new RegExp(searchTerm, 'gi'), 
-                            match => `<span class="highlight">${match}</span>`
+                            match => '<span class="highlight">' + match + '</span>'
                         );
                         element.innerHTML = highlighted;
                         const fileCard = element.closest('.file-card');
@@ -1954,7 +1715,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     if (funcName.includes(searchTerm)) {
                         const highlighted = element.textContent.replace(
                             new RegExp(searchTerm, 'gi'), 
-                            match => `<span class="highlight">${match}</span>`
+                            match => '<span class="highlight">' + match + '</span>'
                         );
                         element.innerHTML = highlighted;
                         const fileCard = element.closest('.file-card');
@@ -2002,11 +1763,13 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     }
                 });
             }
-        });
+        }
 
+        searchInput.addEventListener('input', performSearch);
+        
         clearSearch.addEventListener('click', function() {
             searchInput.value = '';
-            this.style.display = 'none';
+            clearSearch.style.display = 'none';
             
             // Remove all highlights, show all files, and collapse all
             document.querySelectorAll('.highlight').forEach(el => {
@@ -2041,7 +1804,6 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         });
     });
 
-    // File toggle function
     function toggleFile(header) {
         const content = header.nextElementSibling;
         const isExpanding = !header.classList.contains('expanded');
@@ -2056,7 +1818,6 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         }
     }
 
-    // Dashboard Charts initialization
     function initDashboardCharts() {
         const dashboardData = {{ dashboard_data|tojson }};
         const isDark = document.body.getAttribute('data-theme') === 'dark';
@@ -2064,21 +1825,26 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
         const fontFamily = 'Inter, sans-serif';
 
-        // Complexity Distribution Chart
+        // Destroy existing charts
+        Object.values(chartInstances).forEach(chart => {
+            if (chart) {
+                chart.destroy();
+            }
+        });
+
+        // Complexity Distribution
         const complexityCtx = document.getElementById('complexityChart').getContext('2d');
-        new Chart(complexityCtx, {
+        chartInstances.complexityChart = new Chart(complexityCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Low Complexity', 'Medium Complexity', 'High Complexity'],
+                labels: ['Low', 'Medium', 'High'],
                 datasets: [{
                     data: [
                         dashboardData.complexity_distribution.low,
                         dashboardData.complexity_distribution.medium,
                         dashboardData.complexity_distribution.high
                     ],
-                    backgroundColor: ['#43e97b', '#fa709a', '#ff057c'],
-                    borderColor: isDark ? '#1a1a2a' : '#ffffff',
-                    borderWidth: 2
+                    backgroundColor: ['#43e97b', '#fa709a', '#ff057c']
                 }]
             },
             options: {
@@ -2087,7 +1853,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
+                        labels: { 
                             color: textColor,
                             font: {
                                 family: fontFamily,
@@ -2095,41 +1861,25 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                             }
                         }
                     }
-                },
-                cutout: '70%'
+                }
             }
         });
 
-        // Metrics Comparison Chart
+        // Metrics Comparison
         const metricsCtx = document.getElementById('metricsChart').getContext('2d');
-        new Chart(metricsCtx, {
+        chartInstances.metricsChart = new Chart(metricsCtx, {
             type: 'bar',
             data: {
-                labels: ['Complexity', 'Comments', 'Depth', 'Pointers', 'Directives'],
+                labels: ['Complexity', 'Comments', 'Depth', 'Pointers'],
                 datasets: [{
-                    label: 'Average Value',
+                    label: 'Average',
                     data: [
                         dashboardData.avg_metrics.complexity,
                         dashboardData.avg_metrics.comments,
                         dashboardData.avg_metrics.depth,
-                        dashboardData.avg_metrics.pointers,
-                        dashboardData.avg_metrics.directives
+                        dashboardData.avg_metrics.pointers
                     ],
-                    backgroundColor: 'rgba(103, 126, 234, 0.8)',
-                    borderColor: 'rgba(103, 126, 234, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Threshold',
-                    data: [
-                        dashboardData.thresholds.cyclomatic_complexity,
-                        dashboardData.thresholds.comment_percentage,
-                        dashboardData.thresholds.max_block_depth,
-                        dashboardData.thresholds.pointer_operations,
-                        dashboardData.thresholds.preprocessor_directives
-                    ],
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(103, 126, 234, 0.8)'
                 }]
             },
             options: {
@@ -2138,24 +1888,26 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: gridColor
+                        grid: { 
+                            color: gridColor 
                         },
-                        ticks: {
+                        ticks: { 
                             color: textColor,
                             font: {
-                                family: fontFamily
+                                family: fontFamily,
+                                size: 11
                             }
                         }
                     },
                     x: {
-                        grid: {
-                            color: gridColor
+                        grid: { 
+                            color: gridColor 
                         },
-                        ticks: {
+                        ticks: { 
                             color: textColor,
                             font: {
-                                family: fontFamily
+                                family: fontFamily,
+                                size: 11
                             }
                         }
                     }
@@ -2165,7 +1917,8 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                         labels: {
                             color: textColor,
                             font: {
-                                family: fontFamily
+                                family: fontFamily,
+                                size: 12
                             }
                         }
                     }
@@ -2173,10 +1926,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
             }
         });
 
-        // Comments Distribution Chart
+        // Comments Distribution
         const commentsCtx = document.getElementById('commentsChart').getContext('2d');
-        new Chart(commentsCtx, {
-            type: 'polarArea',
+        chartInstances.commentsChart = new Chart(commentsCtx, {
+            type: 'pie',
             data: {
                 labels: Object.keys(dashboardData.comment_ranges).map(k => k.replace('-', '-') + '%'),
                 datasets: [{
@@ -2188,9 +1941,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                         'rgba(255, 5, 124, 0.7)',
                         'rgba(79, 172, 254, 0.7)',
                         'rgba(141, 11, 147, 0.7)'
-                    ],
-                    borderColor: isDark ? '#1a1a2a' : '#ffffff',
-                    borderWidth: 2
+                    ]
                 }]
             },
             options: {
@@ -2199,10 +1950,11 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
+                        labels: { 
                             color: textColor,
                             font: {
-                                family: fontFamily
+                                family: fontFamily,
+                                size: 11
                             }
                         }
                     }
@@ -2212,86 +1964,97 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
         // Depth vs Pointers Chart
         const depthPointersCtx = document.getElementById('depthPointersChart').getContext('2d');
-        new Chart(depthPointersCtx, {
-            type: 'scatter',
-            data: {
-                datasets: [{
-                    label: 'Files',
-                    data: dashboardData.depth_pointers_data,
-                    backgroundColor: 'rgba(103, 126, 234, 0.7)',
-                    borderColor: 'rgba(103, 126, 234, 1)',
-                    borderWidth: 1,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Block Depth',
-                            color: textColor,
-                            font: {
-                                family: fontFamily
+        if (dashboardData.depth_pointers_data && dashboardData.depth_pointers_data.length > 0) {
+            chartInstances.depthPointersChart = new Chart(depthPointersCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Files',
+                        data: dashboardData.depth_pointers_data,
+                        backgroundColor: 'rgba(103, 126, 234, 0.7)',
+                        borderColor: 'rgba(103, 126, 234, 1)',
+                        borderWidth: 1,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Block Depth',
+                                color: textColor,
+                                font: {
+                                    family: fontFamily,
+                                    size: 12
+                                }
+                            },
+                            grid: { 
+                                color: gridColor 
+                            },
+                            ticks: { 
+                                color: textColor,
+                                font: {
+                                    family: fontFamily,
+                                    size: 11
+                                }
                             }
                         },
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            color: textColor,
-                            font: {
-                                family: fontFamily
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Pointer Operations',
+                                color: textColor,
+                                font: {
+                                    family: fontFamily,
+                                    size: 12
+                                }
+                            },
+                            grid: { 
+                                color: gridColor 
+                            },
+                            ticks: { 
+                                color: textColor,
+                                font: {
+                                    family: fontFamily,
+                                    size: 11
+                                }
                             }
                         }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Pointer Operations',
-                            color: textColor,
-                            font: {
-                                family: fontFamily
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor,
+                                font: {
+                                    family: fontFamily,
+                                    size: 12
+                                }
                             }
                         },
-                        grid: {
-                            color: gridColor
-                        },
-                        ticks: {
-                            color: textColor,
-                            font: {
-                                family: fontFamily
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `File: ${context.raw.file}`;
-                            },
-                            afterLabel: function(context) {
-                                return `Depth: ${context.raw.y}\nPointers: ${context.raw.x}`;
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'File: ' + context.raw.file;
+                                },
+                                afterLabel: function(context) {
+                                    return 'Depth: ' + context.raw.y + '\\nPointers: ' + context.raw.x;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
-    function updateChartsTheme() {
-        if (window.chartsInitialized) {
-            initDashboardCharts();
-        }
-        if (window.advancedChartsInitialized) {
-            initAdvancedCharts();
-        }
+    function initAdvancedCharts() {
+        // Advanced charts initialization when needed
+        console.log('Advanced charts initialized');
     }
-</script>
+    </script>
 </body>
 </html>'''
