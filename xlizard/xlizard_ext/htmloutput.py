@@ -4,7 +4,7 @@ import os
 import datetime
 from xlizard.combined_metrics import CombinedMetrics
 from xlizard.sourcemonitor_metrics import SourceMonitorMetrics, Config
-from xlizard.sourcemonitor_metrics import FileAnalyzer, Config
+from xlizard.sourcemonitor_metrics import FileAnalyzer, Config, CodeParser
 
 def html_output(result, options, *_):
     try:
@@ -354,8 +354,6 @@ def html_output(result, options, *_):
     print(output)
     return 0
 
-# ... остальные функции (_get_function_code, _create_dict, _is_in_disable_block) остаются без изменений
-
 def _get_function_code(file_path, start_line, end_line):
     """Чтение кода функции с поддержкой разных кодировок"""
     try:
@@ -398,8 +396,15 @@ def _create_dict(source_function, file_path):
     if func_code:
         # Используем прямое обращение к статическому методу
         func_dict['max_depth'] = FileAnalyzer._calculate_block_depth_accurate(func_code)
+        
+        # Проверяем сложные препроцессоры
+        parser_result = CodeParser.parse_c_like_code(func_code)
+        func_dict['has_complex_preprocessor'] = parser_result.get('has_complex_preprocessor', False)
+        func_dict['balanced_blocks'] = parser_result.get('balanced_blocks', False)
     else:
         func_dict['max_depth'] = 0
+        func_dict['has_complex_preprocessor'] = False
+        func_dict['balanced_blocks'] = True
         
     # Проверяем, находится ли функция в disable-блоке
     func_dict['in_disable_block'] = _is_in_disable_block(file_path, source_function.start_line, source_function.end_line)
@@ -453,7 +458,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --warning-gradient: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
         --danger-gradient: linear-gradient(135deg, #ff057c 0%, #8d0b93 100%);
         --text-primary: #ffffff;
         --text-secondary: rgba(255, 255, 255, 0.8);
@@ -468,9 +473,9 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         --badge-safe-border: rgba(67, 233, 123, 0.4);
         --badge-safe-text: #43e97b;
         
-        --badge-warning-bg: rgba(250, 112, 154, 0.15);
-        --badge-warning-border: rgba(250, 112, 154, 0.4);
-        --badge-warning-text: #fa709a;
+        --badge-warning-bg: rgba(255, 152, 0, 0.15);
+        --badge-warning-border: rgba(255, 152, 0, 0.4);
+        --badge-warning-text: #ff9800;
         
         --badge-danger-bg: rgba(255, 5, 124, 0.15);
         --badge-danger-border: rgba(255, 5, 124, 0.4);
@@ -504,9 +509,9 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         --badge-safe-border: rgba(67, 233, 123, 0.5);
         --badge-safe-text: #27ae60;
         
-        --badge-warning-bg: rgba(250, 112, 154, 0.15);
-        --badge-warning-border: rgba(250, 112, 154, 0.5);
-        --badge-warning-text: #e74c3c;
+        --badge-warning-bg: rgba(255, 152, 0, 0.15);
+        --badge-warning-border: rgba(255, 152, 0, 0.5);
+        --badge-warning-text: #ff9800;
         
         --badge-danger-bg: rgba(255, 5, 124, 0.15);
         --badge-danger-border: rgba(255, 5, 124, 0.5);
@@ -1018,13 +1023,23 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
     }
 
     .metric-value-warning {
-        color: #fa709a;
+        color: #ff9800;
         font-weight: 600;
     }
 
     .function-disabled {
         background: rgba(255, 165, 0, 0.05);
         border-left: 3px solid #ff8c00;
+    }
+
+    .function-preprocessor {
+        background: rgba(255, 152, 0, 0.08);
+        border-left: 3px solid #ff9800;
+    }
+
+    .function-unbalanced {
+        background: rgba(255, 5, 124, 0.08);
+        border-left: 3px solid #ff057c;
     }
 
     /* Tooltips */
@@ -1484,31 +1499,49 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                         <th>
                                             Depth <div class="tooltip-icon" data-tooltip="Maximum nesting depth">?</div>
                                         </th>
+                                        <th>
+                                            Status <div class="tooltip-icon" data-tooltip="Function analysis status">?</div>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for func in file.functions %}
-                                    <tr class="{% if func.in_disable_block %}function-disabled{% endif %}">
+                                    <tr class="{% if func.in_disable_block %}function-disabled{% elif func.has_complex_preprocessor %}function-preprocessor{% elif not func.balanced_blocks %}function-unbalanced{% endif %}">
                                         <td class="function-name">
                                             {{ func.name }}
                                             {% if func.in_disable_block %}
                                             <div class="tooltip-icon" data-tooltip="Function analysis disabled by XLIZARD_DISABLE directive">🟠</div>
+                                            {% elif func.has_complex_preprocessor %}
+                                            <div class="tooltip-icon" data-tooltip="Function skipped due to complex preprocessor directives">🔶</div>
+                                            {% elif not func.balanced_blocks %}
+                                            <div class="tooltip-icon" data-tooltip="Function has unbalanced braces - analysis may be incomplete">⚠️</div>
                                             {% endif %}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.cyclomatic_complexity > thresholds.cyclomatic_complexity %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block or func.has_complex_preprocessor or not func.balanced_blocks %}metric-value-warning{% elif func.cyclomatic_complexity > thresholds.cyclomatic_complexity %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.cyclomatic_complexity }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.nloc > thresholds.nloc %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block or func.has_complex_preprocessor or not func.balanced_blocks %}metric-value-warning{% elif func.nloc > thresholds.nloc %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.nloc }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.token_count > thresholds.token_count %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block or func.has_complex_preprocessor or not func.balanced_blocks %}metric-value-warning{% elif func.token_count > thresholds.token_count %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.token_count }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.parameter_count > thresholds.parameter_count %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block or func.has_complex_preprocessor or not func.balanced_blocks %}metric-value-warning{% elif func.parameter_count > thresholds.parameter_count %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.parameter_count }}
                                         </td>
-                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.max_depth > thresholds.max_block_depth %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                        <td class="{% if func.in_disable_block or func.has_complex_preprocessor or not func.balanced_blocks %}metric-value-warning{% elif func.max_depth > thresholds.max_block_depth %}metric-value-high{% else %}metric-value-low{% endif %}">
                                             {{ func.max_depth }}
+                                        </td>
+                                        <td class="{% if func.in_disable_block %}metric-value-warning{% elif func.has_complex_preprocessor %}metric-value-warning{% elif not func.balanced_blocks %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                            {% if func.in_disable_block %}
+                                            Disabled
+                                            {% elif func.has_complex_preprocessor %}
+                                            Skipped (Preprocessor)
+                                            {% elif not func.balanced_blocks %}
+                                            Unbalanced
+                                            {% else %}
+                                            Analyzed
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -1541,6 +1574,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                 <th>File</th>
                                 <th>Complexity</th>
                                 <th>Lines</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1550,6 +1584,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                 <td>{{ func.file }}</td>
                                 <td class="metric-value-high">{{ func.complexity }}</td>
                                 <td>{{ func.nloc }}</td>
+                                <td class="metric-value-low">Analyzed</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1568,16 +1603,20 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                                 <th>Directory</th>
                                 <th>Avg Complexity</th>
                                 <th>Files</th>
+                                <th>Problem Functions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for dir in dir_complexity_stats %}
+                            {% for dir in directory_stats %}
                             <tr>
                                 <td>{{ dir.name }}</td>
                                 <td class="{% if dir.avg_complexity > thresholds.cyclomatic_complexity %}metric-value-high{% else %}metric-value-low{% endif %}">
                                     {{ dir.avg_complexity|round(1) }}
                                 </td>
                                 <td>{{ dir.file_count }}</td>
+                                <td class="{% if dir.problem_functions > 0 %}metric-value-high{% else %}metric-value-low{% endif %}">
+                                    {{ dir.problem_functions }}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1923,7 +1962,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                         dashboardData.complexity_distribution.medium,
                         dashboardData.complexity_distribution.high
                     ],
-                    backgroundColor: ['#43e97b', '#fa709a', '#ff057c']
+                    backgroundColor: ['#43e97b', '#ff9800', '#ff057c']
                 }]
             },
             options: {
@@ -2016,7 +2055,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
                     backgroundColor: [
                         'rgba(103, 126, 234, 0.7)',
                         'rgba(67, 233, 123, 0.7)',
-                        'rgba(250, 112, 154, 0.7)',
+                        'rgba(255, 152, 0, 0.7)',
                         'rgba(255, 5, 124, 0.7)',
                         'rgba(79, 172, 254, 0.7)',
                         'rgba(141, 11, 147, 0.7)'

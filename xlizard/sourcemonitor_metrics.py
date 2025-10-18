@@ -92,6 +92,38 @@ class CodeParser:
     """Парсер кода для точного анализа структуры с улучшенной точностью"""
     
     @staticmethod
+    def has_complex_preprocessor(content: str) -> bool:
+        """Проверяет наличие сложных препроцессорных директив в функции"""
+        lines = content.split('\n')
+        in_function = False
+        brace_count = 0
+        preprocessor_count = 0
+        
+        for line in lines:
+            stripped = line.strip()
+            
+            # Начало функции
+            if not in_function and re.match(r'^\w+\s+\w+\s*\([^)]*\)\s*\{', stripped):
+                in_function = True
+                brace_count = 1
+                continue
+                
+            if in_function:
+                # Подсчет скобок
+                brace_count += stripped.count('{')
+                brace_count -= stripped.count('}')
+                
+                # Подсчет препроцессорных директив
+                if stripped.startswith('#if') or stripped.startswith('#elif') or stripped.startswith('#else'):
+                    preprocessor_count += 1
+                
+                # Конец функции
+                if brace_count == 0:
+                    break
+        
+        return preprocessor_count >= 2  # Считаем сложным если 2+ препроцессорных директив
+    
+    @staticmethod
     def parse_c_like_code(content: str) -> Dict[str, Any]:
         """Парсинг C-подобного кода с точным определением структуры"""
         try:
@@ -103,6 +135,8 @@ class CodeParser:
             char_escape = False
             stack = []
             in_preprocessor = False
+            in_function = False
+            function_started = False
             
             i = 0
             while i < len(content):
@@ -148,24 +182,35 @@ class CodeParser:
                         string_char = char
                         i += 1
                         continue
-                    # Начало блока
+                    # Начало блока (не считаем саму функцию как уровень)
                     elif char == '{':
-                        depth += 1
+                        if in_function:
+                            depth += 1
+                            max_depth = max(max_depth, depth)
+                        else:
+                            # Это начало функции - не считаем как уровень глубины
+                            in_function = True
+                            function_started = True
                         stack.append('{')
-                        max_depth = max(max_depth, depth)
                         i += 1
                         continue
                     # Конец блока
                     elif char == '}':
                         if stack and stack[-1] == '{':
-                            depth -= 1
+                            if depth > 0:
+                                depth -= 1
                             stack.pop()
+                            # Если стек пуст, выходим из функции
+                            if not stack:
+                                in_function = False
+                                function_started = False
                         i += 1
                         continue
                     # Проверка на условные конструкции для уточнения глубины
                     elif char == 'e' and i + 3 < len(content) and content[i:i+4] == 'else':
                         # else добавляет уровень логической вложенности
-                        max_depth = max(max_depth, depth + 0.5)
+                        if in_function and function_started:
+                            max_depth = max(max_depth, depth + 0.5)
                         i += 4
                         continue
                 
@@ -190,12 +235,13 @@ class CodeParser:
             
             return {
                 'max_depth': max_depth,
-                'balanced_blocks': depth == 0 and not stack
+                'balanced_blocks': depth == 0 and not stack,
+                'has_complex_preprocessor': CodeParser.has_complex_preprocessor(content)
             }
             
         except Exception as e:
             logger.warning(f"Ошибка парсинга кода: {str(e)}")
-            return {'max_depth': 0, 'balanced_blocks': False}
+            return {'max_depth': 0, 'balanced_blocks': False, 'has_complex_preprocessor': False}
 
 class FileAnalyzer:
     """Анализатор отдельных файлов с улучшенной точностью и безопасностью"""
