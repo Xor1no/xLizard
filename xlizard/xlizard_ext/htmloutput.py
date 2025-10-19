@@ -6,6 +6,543 @@ from xlizard.combined_metrics import CombinedMetrics
 from xlizard.sourcemonitor_metrics import SourceMonitorMetrics, Config
 from xlizard.sourcemonitor_metrics import FileAnalyzer, Config, CodeParser
 
+# Duck game functions - defined inline to avoid import issues
+def get_duck_game_script():
+    """Returns the JavaScript code for the duck game"""
+    return """
+<script>
+class DuckGame {
+    constructor() {
+        this.isActive = false;
+        this.score = 0;
+        this.lives = 5;
+        this.ducks = [];
+        this.spawnInterval = null;
+        this.animationFrame = null;
+        this.baseSpeed = 2;
+        this.speedMultiplier = 1;
+        this.gameContainer = null;
+        this.scoreDisplay = null;
+        this.livesDisplay = null;
+        this.gameOverScreen = null;
+        this.lastSpeedIncrease = 0;
+        this.spawnRate = 1500;
+        this.maxDucks = 7;
+        this.typedChars = '';
+        this.activationTimer = null;
+        
+        this.init();
+    }
+
+    init() {
+        this.createGameUI();
+        this.setupEventListeners();
+    }
+
+    createGameUI() {
+        // Create game container - initially hidden
+        this.gameContainer = document.createElement('div');
+        this.gameContainer.id = 'duckGameContainer';
+        this.gameContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10000;
+            overflow: hidden;
+            display: none;
+        `;
+
+        // Create score display (RIGHT TOP) - initially hidden
+        this.scoreDisplay = document.createElement('div');
+        this.scoreDisplay.id = 'duckGameScore';
+        this.scoreDisplay.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b35;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 10001;
+            font-family: 'Inter', sans-serif;
+            border: 3px solid rgba(255, 107, 53, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        `;
+        this.scoreDisplay.textContent = 'Score: 0';
+
+        // Create lives display (LEFT TOP) - initially hidden
+        this.livesDisplay = document.createElement('div');
+        this.livesDisplay.id = 'duckGameLives';
+        this.livesDisplay.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #ff6b35;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 10001;
+            font-family: 'Inter', sans-serif;
+            border: 3px solid rgba(255, 107, 53, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        `;
+        this.updateLivesDisplay();
+
+        // Create game over screen
+        this.gameOverScreen = document.createElement('div');
+        this.gameOverScreen.id = 'duckGameOver';
+        this.gameOverScreen.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            z-index: 10002;
+            pointer-events: auto;
+            display: none;
+            font-family: 'Inter', sans-serif;
+            min-width: 350px;
+            border: 4px solid rgba(255, 107, 53, 0.5);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        `;
+        this.gameOverScreen.innerHTML = `
+            <h2 style="color: #ff6b35; margin-bottom: 25px; font-size: 32px;">Game Over!</h2>
+            <p style="font-size: 20px; margin-bottom: 15px; color: #333;">Final Score: <span id="finalScore" style="font-weight: bold; color: #ff6b35;">0</span></p>
+            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
+                <button id="restartGame" style="
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+                    transition: all 0.3s ease;
+                ">Restart</button>
+                <button id="closeGame" style="
+                    background: linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%);
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+                    transition: all 0.3s ease;
+                ">Work</button>
+            </div>
+        `;
+
+        document.body.appendChild(this.gameContainer);
+        document.body.appendChild(this.scoreDisplay);
+        document.body.appendChild(this.livesDisplay);
+        document.body.appendChild(this.gameOverScreen);
+
+        // Add game over event listeners
+        document.getElementById('restartGame').addEventListener('click', () => this.restartGame());
+        document.getElementById('closeGame').addEventListener('click', () => this.stopGame());
+        
+        // Add hover effects
+        const restartBtn = document.getElementById('restartGame');
+        const closeBtn = document.getElementById('closeGame');
+        
+        restartBtn.addEventListener('mouseenter', () => {
+            restartBtn.style.transform = 'translateY(-3px)';
+            restartBtn.style.boxShadow = '0 6px 20px rgba(79, 172, 254, 0.6)';
+        });
+        restartBtn.addEventListener('mouseleave', () => {
+            restartBtn.style.transform = 'translateY(0)';
+            restartBtn.style.boxShadow = '0 4px 15px rgba(79, 172, 254, 0.4)';
+        });
+        
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.transform = 'translateY(-3px)';
+            closeBtn.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.6)';
+        });
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.transform = 'translateY(0)';
+            closeBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.4)';
+        });
+    }
+
+    setupEventListeners() {
+        // Listen for keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (this.isActive) return;
+            
+            this.typedChars += e.key.toLowerCase();
+            
+            // Keep only last 10 characters
+            if (this.typedChars.length > 10) {
+                this.typedChars = this.typedChars.slice(-10);
+            }
+            
+            // Check if "duck" is typed
+            if (this.typedChars.includes('duck')) {
+                if (this.activationTimer) {
+                    clearTimeout(this.activationTimer);
+                }
+                
+                this.activationTimer = setTimeout(() => {
+                    if (!this.isActive) {
+                        this.startGame();
+                    }
+                }, 300);
+            }
+        });
+
+        // Listen for clicks on ducks
+        this.gameContainer.addEventListener('click', (e) => {
+            if (this.isActive && e.target.classList.contains('duck')) {
+                this.hitDuck(e.target);
+            }
+        });
+    }
+
+    startGame() {
+        if (this.isActive) return;
+        
+        this.isActive = true;
+        this.score = 0;
+        this.lives = 5;
+        this.ducks = [];
+        this.baseSpeed = 2;
+        this.speedMultiplier = 1;
+        this.lastSpeedIncrease = Date.now();
+        this.spawnRate = 1500;
+        this.typedChars = '';
+        
+        this.scoreDisplay.textContent = 'Score: 0';
+        this.updateLivesDisplay();
+        this.gameOverScreen.style.display = 'none';
+        
+        this.showGameUI();
+        this.startSpawning();
+        this.gameLoop();
+        
+        console.log('🦆 Duck Game Started!');
+    }
+
+    stopGame() {
+        this.isActive = false;
+        this.clearGame();
+        this.hideGameUI();
+        console.log('🦆 Duck Game Stopped');
+    }
+
+    restartGame() {
+        this.stopGame();
+        setTimeout(() => this.startGame(), 100);
+    }
+
+    clearGame() {
+        if (this.spawnInterval) {
+            clearInterval(this.spawnInterval);
+            this.spawnInterval = null;
+        }
+        
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
+        
+        // Remove all ducks
+        this.ducks.forEach(duck => {
+            if (duck.element && duck.element.parentNode) {
+                duck.element.remove();
+            }
+        });
+        this.ducks = [];
+    }
+
+    hideGameUI() {
+        // Hide game container
+        this.gameContainer.style.display = 'none';
+        
+        // Hide and reset UI elements with animation
+        this.scoreDisplay.style.display = 'none';
+        this.scoreDisplay.style.opacity = '0';
+        this.scoreDisplay.style.transform = 'translateY(-20px)';
+        
+        this.livesDisplay.style.display = 'none';
+        this.livesDisplay.style.opacity = '0';
+        this.livesDisplay.style.transform = 'translateY(-20px)';
+        
+        this.gameOverScreen.style.display = 'none';
+    }
+
+    showGameUI() {
+        // Show game container
+        this.gameContainer.style.display = 'block';
+        
+        // Show score and lives with smooth animation
+        setTimeout(() => {
+            this.scoreDisplay.style.display = 'block';
+            this.livesDisplay.style.display = 'block';
+            
+            // Trigger animation
+            setTimeout(() => {
+                this.scoreDisplay.style.opacity = '1';
+                this.scoreDisplay.style.transform = 'translateY(0)';
+                this.livesDisplay.style.opacity = '1';
+                this.livesDisplay.style.transform = 'translateY(0)';
+            }, 50);
+        }, 100);
+    }
+
+    startSpawning() {
+        this.lastSpeedIncrease = Date.now();
+        
+        this.spawnInterval = setInterval(() => {
+            if (this.ducks.length < this.maxDucks) {
+                this.spawnDuck();
+            }
+        }, this.spawnRate);
+    }
+
+    spawnDuck() {
+        const duck = document.createElement('div');
+        duck.className = 'duck';
+        duck.style.cssText = `
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8c3ZnIGhlaWdodD0iNjAiIHdpZHRoPSI2MCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnPgoJPHBhdGggZmlsbD0iI0QxODc3MCIgZD0iTTkwLjQ2NSwxODYuOTEyYzAuMDg2LTcuNTgxLTUuMjYtMjcuNDksMi43NzEtNDMuNzgxYzguMDI1LTE2LjI5MS00Mi4yMjYtMjAuNTQ2LTY3LjY4MiwwLjM2NwoJCWMtMjQuNTEsMjAuMTM3LDEuNzY0LDM3LjQ2OCwxNy45MzgsMzMuNjU3Qzc2LjI2NywxNjkuNDI4LDkwLjI5OSwyMDIuMjYxLDkwLjQ2NSwxODYuOTEyeiIvPgoJPHBhdGggZmlsbD0iI0REODk2OCIgZD0iTTczLjMxNSw5Ni4wMDljMC4wNzksNy41NzQtNS4yNiwyNy40ODMsMi43NjQsNDMuNzgyYzguMDI1LDE2LjI3Ny00Ni43OTksMjUuMTA1LTY3LjY3NC0wLjM3NQoJCWMtMjAuODc4LTI1LjQ4LDEuNzYtMzcuNDYxLDE3Ljk0MS0zMy42NUM1OS4xMDIsMTEzLjQ4NSw3My4xMzcsODAuNjU0LDczLjMxNSw5Ni4wMDl6Ii8+Cgk8cGF0aCBmaWxsPSIjRjZFMTc0IiBkPSJNNzYuNDUsMjY0LjIxMWMxOC4xODMtMjEuNDA2LDMzLjA5Mi0zMS4wMzgsMjAuODIxLTUwLjQzMwoJCWMtMjMuNDAyLTIzLjQwOC0zNC4zMDktNDguNzQzLTM0LjMwOS04NC40NThjMC0zNS43MDksMTQuNDc2LTY4LjAzNSwzNy44NzYtOTEuNDM2QzEyNC4yNDMsMTQuNDgzLDE1Ni41NjMsMCwxOTIuMjc4LDAKCQlzNjguMDM1LDE4LjQ4Myw5MS40NDMsMzcuODg0YzIzLjQwMSwyMy40MDIsMzcuODcsNTUuNzI4LDM3Ljg3LDkxLjQzNmMwLDUyLjc4OS00Mi4yMjIsOTUuMDExLTQyLjIyMiwxMjEuNAoJCWMtMi42NCwxMC41NjEsMTUuODM1LDIzLjc2MSwzOS41ODIsMjMuNzYxYzIzLjc2MSwwLDEwMi45MzIsMTguNDY3LDE2MC45ODgtNTguMDYzYzE1LjI4LTIxLjEyMiwzMy43NTUtOS4yMzgsMzEuNjc1LDIxLjEwNwoJCUM1MDkuNjE4LDI2Ni42MDksNDkzLjEzMyw1MTIsMzE4Ljk1MSw1MTJjLTUwLjEzNSwwLTQzLjc4OCwwLTEzOS44NzQsMGMtNDAuMDc0LDAtNzYuMzYtMTYuMjUtMTAyLjYyNy00Mi41MTMKCQljLTI2LjI3My0yNi4yNy00Mi41Mi02Mi41NTQtNDIuNTItMTA2LjY0OUMzMy45MywzMjYuNzY1LDUwLjE3NiwyOTAuNDc0LDc2LjQ1LDI2NC4yMTEiLz4KCTxwYXRoIGZpbGw9IiVFNUQyOUIiIGQ9Ik0yMTkuNTMzLDM0MC40NThoMTkzLjIxNmMyMS4xMDgsMCwyNi4zODgsMzYuOTQxLTcuOTIsNTguMDYzYzAsMjYuMzgtMTMuMjAxLDY1Ljk3LTUyLjc4Miw2NS45NwoJCWMtMzkuNTk2LDAtODcuMDkyLDAtMTIxLjQsMGMtMzQuMzE2LDAtNTguMDY0LTM5LjU5LTU4LjA2NC02My4zMzdDMTcyLjU4NCwzNzcuMzk5LDE5NS43NzcsMzQwLjQ1OCwyMTkuNTMzLDM0MC40NTh6Ii8+Cgk8cGF0aCBmaWxsPSIjRjBENzgwIiBkPSJNMjA2LjMzMSwzMjQuNjE2aDE5My4yMThjMjEuMTA4LDAsMjYuMzg4LDM2Ljk0OS03LjkyLDU4LjA2NGMwLDI2LjM5NS0xMy4xOTQsNjUuOTgzLTUyLjc3Niw2NS45ODMKCQljLTM5LjU4OSwwLTg3LjA5NywwLTEyMS40MDYsMHMtNTguMDU3LTM5LjU4OS01OC4wNTctNjMuMzQ0QzE1OS4zOSwzNjEuNTY1LDE4Mi41ODMsMzI0LjYxNiwyMDYuMzMxLDMyNC42MTZ6Ii8+Cgk8cGF0aCBmaWxsPSIjRkZGRkZGIiBkPSJNMTU5LjM5LDEwOS41MjJjMCwxNi43Ny0xMy41OTYsMzAuMzU5LTMwLjM0OCwzMC4zNTljLTE2Ljc2MywwLTMwLjM1NS0xMy41ODktMzAuMzU1LTMwLjM1OQoJCWMwLTE2Ljc0OCwxMy41OTItMzAuMzQ0LDMwLjM1NS0zMC4zNDRDMTQ1Ljc5NCw3OS4xNzcsMTU5LjM5LDkyLjc3MywxNTkuMzksMTA5LjUyMnoiLz4KCTxwYXRoIGZpbGw9IiM2NDYzNjMiIGQ9Ik0xNDMuNTU2LDEwOS41MjJjMCw4LjAyNS02LjUwMywxNC41MjUtMTQuNTE0LDE0LjUyNWMtOC4wMTgsMC0xNC41MTgtNi41LTE0LjUxOC0xNC41MjUKCQljMC04LjAwMyw2LjUtMTQuNTAzLDE0LjUxOC0xNC41MDNDMTM3LjA1Miw5NS4wMTgsMTQ3LjU1NiwxMDEuNTE4LDE0My41NTYsMTA5LjUyMnoiLz4KPC9nPgo8L3N2Zz4K");
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: auto;
+            cursor: crosshair;
+            top: -70px;
+            left: ${Math.random() * (window.innerWidth - 80)}px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            z-index: 10001;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+        `;
+
+        this.gameContainer.appendChild(duck);
+
+        const duckObj = {
+            element: duck,
+            speed: this.baseSpeed * this.speedMultiplier,
+            x: parseInt(duck.style.left),
+            y: -70,
+            isHit: false
+        };
+
+        this.ducks.push(duckObj);
+    }
+
+    gameLoop() {
+        if (!this.isActive) return;
+
+        const currentTime = Date.now();
+        
+        // Increase difficulty every 5 seconds
+        if (currentTime - this.lastSpeedIncrease > 5000) {
+            this.speedMultiplier = Math.min(this.speedMultiplier + 0.2, 4);
+            this.spawnRate = Math.max(this.spawnRate - 100, 600);
+            this.lastSpeedIncrease = currentTime;
+        }
+
+        // Update ducks
+        for (let i = this.ducks.length - 1; i >= 0; i--) {
+            const duck = this.ducks[i];
+            if (duck.isHit) continue;
+
+            duck.y += duck.speed;
+            duck.element.style.top = duck.y + 'px';
+
+            // Check if duck is out of bounds
+            if (duck.y > window.innerHeight) {
+                this.missDuck(i);
+            }
+        }
+
+        this.animationFrame = requestAnimationFrame(() => this.gameLoop());
+    }
+
+    hitDuck(duckElement) {
+        const duckIndex = this.ducks.findIndex(d => d.element === duckElement);
+        if (duckIndex === -1 || this.ducks[duckIndex].isHit) return;
+
+        const duck = this.ducks[duckIndex];
+        duck.isHit = true;
+
+        // Add hit effect
+        duck.element.style.transform = 'scale(1.3) rotate(15deg)';
+        duck.element.style.opacity = '0.5';
+        duck.element.style.filter = 'brightness(2) drop-shadow(0 0 8px #ff6b35)';
+        
+        setTimeout(() => {
+            if (duck.element && duck.element.parentNode) {
+                duck.element.remove();
+            }
+            this.ducks.splice(duckIndex, 1);
+        }, 150);
+
+        this.score += 10;
+        this.scoreDisplay.textContent = `Score: ${this.score}`;
+        this.scoreDisplay.style.animation = 'none';
+        setTimeout(() => {
+            this.scoreDisplay.style.animation = 'scorePop 0.3s ease';
+        }, 10);
+    }
+
+    missDuck(duckIndex) {
+        const duck = this.ducks[duckIndex];
+        if (duck.element && duck.element.parentNode) {
+            duck.element.remove();
+        }
+        this.ducks.splice(duckIndex, 1);
+
+        this.lives--;
+        this.updateLivesDisplay();
+
+        this.livesDisplay.style.animation = 'none';
+        setTimeout(() => {
+            this.livesDisplay.style.animation = 'lifeLost 0.5s ease';
+        }, 10);
+
+        if (this.lives <= 0) {
+            this.gameOver();
+        }
+    }
+
+    updateLivesDisplay() {
+        const hearts = '❤️'.repeat(this.lives) + '♡'.repeat(5 - this.lives);
+        this.livesDisplay.innerHTML = `Lives: <span style="font-size: 26px;">${hearts}</span>`;
+    }
+
+    gameOver() {
+        this.isActive = false;
+        this.clearGame();
+        
+        document.getElementById('finalScore').textContent = this.score;
+        this.gameOverScreen.style.display = 'block';
+    }
+}
+
+// Initialize game when page loads
+let duckGame;
+document.addEventListener('DOMContentLoaded', () => {
+    duckGame = new DuckGame();
+});
+
+window.DuckGame = DuckGame;
+</script>
+"""
+
+def get_duck_game_css():
+    """Returns CSS styles for the duck game"""
+    return """
+<style>
+.duck {
+    animation: duckFloat 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes duckFloat {
+    0% { transform: translateY(0px) rotate(-2deg); }
+    100% { transform: translateY(-8px) rotate(2deg); }
+}
+
+.duck:hover {
+    filter: drop-shadow(2px 2px 6px rgba(255, 107, 53, 0.8)) brightness(1.1) !important;
+    transform: scale(1.05) !important;
+}
+
+#duckGameContainer {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+@keyframes scorePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes lifeLost {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+#duckGameOver {
+    animation: modalAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalAppear {
+    from { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0.7); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1); 
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #duckGameScore, #duckGameLives {
+        font-size: 18px !important;
+        padding: 8px 16px !important;
+        top: 10px !important;
+    }
+    
+    #duckGameLives {
+        left: 10px !important;
+    }
+    
+    #duckGameScore {
+        right: 10px !important;
+    }
+    
+    .duck {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    #duckGameOver {
+        min-width: 280px !important;
+        padding: 30px !important;
+    }
+}
+</style>
+"""
+
 def html_output(result, options, *_):
     try:
         from jinja2 import Template
@@ -67,27 +604,51 @@ def html_output(result, options, *_):
             max_complexity = 0
             for source_function in combined.functions:
                 if source_function:
-                    func_dict = _create_dict(source_function, source_file.filename)
-                    func_dict['in_disable_block'] = _is_in_disable_block(
-                        source_file.filename, 
-                        source_function.start_line, 
-                        source_function.end_line
-                    )
-                    if not hasattr(source_function, 'token_count'):
-                        func_dict['token_count'] = 0
-                    func_list.append(func_dict)
-                    # Calculate max complexity for the file (only for active functions)
-                    if not func_dict['in_disable_block'] and func_dict['cyclomatic_complexity'] > max_complexity:
-                        max_complexity = func_dict['cyclomatic_complexity']
+                    try:
+                        func_dict = _create_dict(source_function, source_file.filename)
+                        if func_dict:
+                            func_dict['in_disable_block'] = _is_in_disable_block(
+                                source_file.filename, 
+                                source_function.start_line, 
+                                source_function.end_line
+                            )
+                            if not hasattr(source_function, 'token_count') or func_dict.get('token_count') is None:
+                                func_dict['token_count'] = 0
+                            func_list.append(func_dict)
+                            if not func_dict['in_disable_block'] and func_dict.get('cyclomatic_complexity', 0) > max_complexity:
+                                max_complexity = func_dict['cyclomatic_complexity']
+                    except Exception as e:
+                        print(f"Warning: Skipping function {source_function.name} due to error: {str(e)}")
+                        problem_func = {
+                            'name': source_function.name,
+                            'cyclomatic_complexity': getattr(source_function, 'cyclomatic_complexity', 0),
+                            'nloc': getattr(source_function, 'nloc', 0),
+                            'token_count': getattr(source_function, 'token_count', 0),
+                            'parameter_count': getattr(source_function, 'parameter_count', 0),
+                            'start_line': getattr(source_function, 'start_line', 0),
+                            'end_line': getattr(source_function, 'end_line', 0),
+                            'max_depth': 0,
+                            'has_complex_preprocessor': True,
+                            'balanced_blocks': False,
+                            'in_disable_block': False
+                        }
+                        func_list.append(problem_func)
+                        continue
             
             source_file_dict["functions"] = func_list
             source_file_dict["max_complexity"] = max_complexity
             
-            # Calculate average complexity only for active functions
-            active_functions = [f for f in func_list if not f['in_disable_block']]
-            source_file_dict["avg_complexity"] = sum(
-                func['cyclomatic_complexity'] for func in active_functions
-            ) / len(active_functions) if active_functions else 0
+            active_functions = [f for f in func_list if not f.get('in_disable_block', False)]
+            if active_functions:
+                source_file_dict["avg_complexity"] = sum(
+                    func.get('cyclomatic_complexity', 0) for func in active_functions
+                ) / len(active_functions)
+            else:
+                source_file_dict["avg_complexity"] = 0
+            
+            source_file_dict["active_functions_count"] = len([f for f in func_list if not f.get('in_disable_block', False)])
+            source_file_dict["disabled_functions_count"] = len([f for f in func_list if f.get('in_disable_block', False)])
+            source_file_dict["problem_functions"] = len([f for f in active_functions if f.get('cyclomatic_complexity', 0) > options.thresholds['cyclomatic_complexity']])
             
             file_list.append(source_file_dict)
     
@@ -109,14 +670,20 @@ def html_output(result, options, *_):
     conditional_data = []
     
     for file in file_list:
-        active_functions = [f for f in file['functions'] if not f['in_disable_block']]
+        active_functions = [f for f in file['functions'] if not f.get('in_disable_block', False)]
         if active_functions:
-            complexity_data.extend([f['cyclomatic_complexity'] for f in active_functions])
+            complexity_data.extend([f.get('cyclomatic_complexity', 0) for f in active_functions])
+        if file['comment_percentage'] is not None:
             comment_data.append(file['comment_percentage'])
+        if file['max_block_depth'] is not None:
             depth_data.append(file['max_block_depth'])
+        if file['pointer_operations'] is not None:
             pointer_data.append(file['pointer_operations'])
+        if file['preprocessor_directives'] is not None:
             directives_data.append(file['preprocessor_directives'])
+        if file['logical_operators'] is not None:
             logical_ops_data.append(file['logical_operators'])
+        if file['conditional_statements'] is not None:
             conditional_data.append(file['conditional_statements'])
     
     # Prepare comment distribution data
@@ -130,10 +697,14 @@ def html_output(result, options, *_):
     }
     
     # Prepare depth vs pointers data
-    depth_pointers_data = [
-        {'x': f['pointer_operations'], 'y': f['max_block_depth'], 'file': f['basename']} 
-        for f in file_list
-    ]
+    depth_pointers_data = []
+    for f in file_list:
+        if f['pointer_operations'] is not None and f['max_block_depth'] is not None:
+            depth_pointers_data.append({
+                'x': f['pointer_operations'], 
+                'y': f['max_block_depth'], 
+                'file': f['basename']
+            })
     
     # Prepare complexity vs nloc data (only active functions)
     complexity_nloc_data = []
@@ -141,36 +712,44 @@ def html_output(result, options, *_):
     
     for file in file_list:
         for func in file['functions']:
-            if not func['in_disable_block']:  # Only active functions
-                complexity_nloc_data.append({
-                    'x': func['nloc'],
-                    'y': func['cyclomatic_complexity'],
-                    'function': func['name'],
-                    'file': file['basename']
-                })
-                
-                top_complex_functions.append({
-                    'name': func['name'],
-                    'complexity': func['cyclomatic_complexity'],
-                    'nloc': func['nloc'],
-                    'file': file['basename'],
-                    'filepath': file['filename']
-                })
+            if not func.get('in_disable_block', False):
+                nloc = func.get('nloc', 0)
+                complexity = func.get('cyclomatic_complexity', 0)
+                if nloc is not None and complexity is not None:
+                    complexity_nloc_data.append({
+                        'x': nloc,
+                        'y': complexity,
+                        'function': func.get('name', 'unknown'),
+                        'file': file['basename']
+                    })
+                    
+                    top_complex_functions.append({
+                        'name': func.get('name', 'unknown'),
+                        'complexity': complexity,
+                        'nloc': nloc,
+                        'file': file['basename'],
+                        'filepath': file['filename']
+                    })
     
     # Get top 5 most complex functions (only active)
     top_complex_functions.sort(key=lambda x: -x['complexity'])
     top_complex_functions = top_complex_functions[:5]
     
     # Get files with min/max comments
-    files_sorted_by_comments = sorted(file_list, key=lambda x: x['comment_percentage'])
-    min_comments_files = files_sorted_by_comments[:5]
-    max_comments_files = files_sorted_by_comments[-5:]
-    max_comments_files.reverse()
+    files_with_comments = [f for f in file_list if f['comment_percentage'] is not None]
+    if files_with_comments:
+        files_sorted_by_comments = sorted(files_with_comments, key=lambda x: x['comment_percentage'])
+        min_comments_files = files_sorted_by_comments[:5]
+        max_comments_files = files_sorted_by_comments[-5:]
+        max_comments_files.reverse()
+    else:
+        min_comments_files = []
+        max_comments_files = []
     
     # Calculate code/comment/empty ratio
-    total_code_lines = sum(f['lines_of_code'] for f in file_list)
-    total_comment_lines = sum(f['comment_lines'] for f in file_list)
-    total_empty_lines = sum(f['total_lines'] - f['lines_of_code'] - f['comment_lines'] for f in file_list)
+    total_code_lines = sum(f['lines_of_code'] for f in file_list if f['lines_of_code'] is not None)
+    total_comment_lines = sum(f['comment_lines'] for f in file_list if f['comment_lines'] is not None)
+    total_empty_lines = sum(f['total_lines'] - f['lines_of_code'] - f['comment_lines'] for f in file_list if all(x is not None for x in [f['total_lines'], f['lines_of_code'], f['comment_lines']]))
     
     code_ratio = {
         'code': total_code_lines,
@@ -181,14 +760,16 @@ def html_output(result, options, *_):
     # Calculate directory complexity stats (only active functions)
     dir_complexity_stats = []
     for dirname, files in dir_groups.items():
-        total_complexity = sum(f['avg_complexity'] for f in files)
-        total_files = len(files)
-        avg_complexity = total_complexity / total_files if total_files else 0
-        dir_complexity_stats.append({
-            'name': dirname,
-            'avg_complexity': avg_complexity,
-            'file_count': total_files
-        })
+        files_with_complexity = [f for f in files if f['avg_complexity'] is not None]
+        if files_with_complexity:
+            total_complexity = sum(f['avg_complexity'] for f in files_with_complexity)
+            total_files = len(files_with_complexity)
+            avg_complexity = total_complexity / total_files if total_files else 0
+            dir_complexity_stats.append({
+                'name': dirname,
+                'avg_complexity': avg_complexity,
+                'file_count': total_files
+            })
     
     # Sort directories by complexity
     dir_complexity_stats.sort(key=lambda x: -x['avg_complexity'])
@@ -219,83 +800,95 @@ def html_output(result, options, *_):
         dir_directives = 0
         dir_logical_ops = 0
         dir_conditionals = 0
+        valid_files = 0
         
         for file in files:
-            # Separate active and disabled functions
-            active_functions = [f for f in file['functions'] if not f['in_disable_block']]
-            disabled_functions = [f for f in file['functions'] if f['in_disable_block']]
+            active_functions = [f for f in file['functions'] if not f.get('in_disable_block', False)]
+            disabled_functions = [f for f in file['functions'] if f.get('in_disable_block', False)]
             
-            # Calculate metrics only for active functions
-            file['problem_functions'] = sum(
-                1 for func in active_functions 
-                if func['cyclomatic_complexity'] > options.thresholds['cyclomatic_complexity']
-            )
-            file['max_complexity'] = max(
-                (func['cyclomatic_complexity'] for func in active_functions),
-                default=0
-            )
-            file['avg_complexity'] = sum(
-                func['cyclomatic_complexity'] for func in active_functions
-            ) / len(active_functions) if active_functions else 0
-            
-            # Count disabled functions
             file['disabled_functions_count'] = len(disabled_functions)
             file['active_functions_count'] = len(active_functions)
             
-            dir_complexity += file['avg_complexity']
-            dir_max_complexity = max(dir_max_complexity, file['max_complexity'])
+            if file['avg_complexity'] is not None:
+                dir_complexity += file['avg_complexity']
+                valid_files += 1
+            
+            if file['max_complexity'] is not None:
+                dir_max_complexity = max(dir_max_complexity, file['max_complexity'])
+            
             dir_functions += file['active_functions_count']
             dir_disabled_functions += file['disabled_functions_count']
-            dir_problem_functions += file['problem_functions']
-            dir_comments += file['comment_percentage']
-            dir_depth += file['max_block_depth']
-            dir_pointers += file['pointer_operations']
-            dir_directives += file['preprocessor_directives']
-            dir_logical_ops += file['logical_operators']
-            dir_conditionals += file['conditional_statements']
+            dir_problem_functions += file.get('problem_functions', 0)
             
-            total_complexity += file['avg_complexity']
+            if file['comment_percentage'] is not None:
+                dir_comments += file['comment_percentage']
+            if file['max_block_depth'] is not None:
+                dir_depth += file['max_block_depth']
+            if file['pointer_operations'] is not None:
+                dir_pointers += file['pointer_operations']
+            if file['preprocessor_directives'] is not None:
+                dir_directives += file['preprocessor_directives']
+            if file['logical_operators'] is not None:
+                dir_logical_ops += file['logical_operators']
+            if file['conditional_statements'] is not None:
+                dir_conditionals += file['conditional_statements']
+            
+            total_complexity += file['avg_complexity'] if file['avg_complexity'] is not None else 0
             total_functions += file['active_functions_count']
             total_disabled_functions += file['disabled_functions_count']
-            total_comments += file['comment_percentage']
-            total_depth += file['max_block_depth']
-            total_pointers += file['pointer_operations']
-            total_directives += file['preprocessor_directives']
-            total_logical_ops += file['logical_operators']
-            total_conditionals += file['conditional_statements']
+            total_comments += file['comment_percentage'] if file['comment_percentage'] is not None else 0
+            total_depth += file['max_block_depth'] if file['max_block_depth'] is not None else 0
+            total_pointers += file['pointer_operations'] if file['pointer_operations'] is not None else 0
+            total_directives += file['preprocessor_directives'] if file['preprocessor_directives'] is not None else 0
+            total_logical_ops += file['logical_operators'] if file['logical_operators'] is not None else 0
+            total_conditionals += file['conditional_statements'] if file['conditional_statements'] is not None else 0
             
-            if file['max_complexity'] > options.thresholds['cyclomatic_complexity']:
+            if file['max_complexity'] is not None and file['max_complexity'] > options.thresholds['cyclomatic_complexity']:
                 problem_files += 1
         
         directory_stats.append({
             'name': dirname,
             'max_complexity': dir_max_complexity,
-            'avg_complexity': dir_complexity / len(files) if files else 0,
+            'avg_complexity': dir_complexity / valid_files if valid_files else 0,
             'total_functions': dir_functions,
             'disabled_functions': dir_disabled_functions,
             'problem_functions': dir_problem_functions,
             'file_count': len(files),
-            'avg_comments': dir_comments / len(files) if files else 0,
-            'avg_depth': dir_depth / len(files) if files else 0,
-            'avg_pointers': dir_pointers / len(files) if files else 0,
-            'avg_directives': dir_directives / len(files) if files else 0,
-            'avg_logical_ops': dir_logical_ops / len(files) if files else 0,
-            'avg_conditionals': dir_conditionals / len(files) if files else 0
+            'avg_comments': dir_comments / len(files) if files and dir_comments > 0 else 0,
+            'avg_depth': dir_depth / len(files) if files and dir_depth > 0 else 0,
+            'avg_pointers': dir_pointers / len(files) if files and dir_pointers > 0 else 0,
+            'avg_directives': dir_directives / len(files) if files and dir_directives > 0 else 0,
+            'avg_logical_ops': dir_logical_ops / len(files) if files and dir_logical_ops > 0 else 0,
+            'avg_conditionals': dir_conditionals / len(files) if files and dir_conditionals > 0 else 0
         })
     
-    avg_complexity = total_complexity / len(file_list) if file_list else 0
-    avg_comments = total_comments / len(file_list) if file_list else 0
-    avg_depth = total_depth / len(file_list) if file_list else 0
-    avg_pointers = total_pointers / len(file_list) if file_list else 0
-    avg_directives = total_directives / len(file_list) if file_list else 0
-    avg_logical_ops = total_logical_ops / len(file_list) if file_list else 0
-    avg_conditionals = total_conditionals / len(file_list) if file_list else 0
+    # Calculate averages safely
+    valid_files_for_avg = [f for f in file_list if f['avg_complexity'] is not None]
+    avg_complexity = sum(f['avg_complexity'] for f in valid_files_for_avg) / len(valid_files_for_avg) if valid_files_for_avg else 0
+    
+    valid_comments = [f for f in file_list if f['comment_percentage'] is not None]
+    avg_comments = sum(f['comment_percentage'] for f in valid_comments) / len(valid_comments) if valid_comments else 0
+    
+    valid_depth = [f for f in file_list if f['max_block_depth'] is not None]
+    avg_depth = sum(f['max_block_depth'] for f in valid_depth) / len(valid_depth) if valid_depth else 0
+    
+    valid_pointers = [f for f in file_list if f['pointer_operations'] is not None]
+    avg_pointers = sum(f['pointer_operations'] for f in valid_pointers) / len(valid_pointers) if valid_pointers else 0
+    
+    valid_directives = [f for f in file_list if f['preprocessor_directives'] is not None]
+    avg_directives = sum(f['preprocessor_directives'] for f in valid_directives) / len(valid_directives) if valid_directives else 0
+    
+    valid_logical_ops = [f for f in file_list if f['logical_operators'] is not None]
+    avg_logical_ops = sum(f['logical_operators'] for f in valid_logical_ops) / len(valid_logical_ops) if valid_logical_ops else 0
+    
+    valid_conditionals = [f for f in file_list if f['conditional_statements'] is not None]
+    avg_conditionals = sum(f['conditional_statements'] for f in valid_conditionals) / len(valid_conditionals) if valid_conditionals else 0
     
     # Combine thresholds with new values
     full_thresholds = {
         'cyclomatic_complexity': 20,
         'nloc': 100,
-        'comment_percentage': 0,  # Не учитываем threshold, только отображаем
+        'comment_percentage': 0,
         'max_block_depth': 3,
         'pointer_operations': 70,
         'preprocessor_directives': 30,
@@ -328,7 +921,16 @@ def html_output(result, options, *_):
         'thresholds': full_thresholds
     }
     
-    output = Template(TEMPLATE).render(
+    # Add duck game to template
+    template_with_game = TEMPLATE.replace(
+        '</style>', 
+        get_duck_game_css() + '</style>'
+    ).replace(
+        '</body>', 
+        get_duck_game_script() + '</body>'
+    )
+    
+    output = Template(template_with_game).render(
             title='xLizard + SourceMonitor code report',
             date=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
             thresholds=full_thresholds, 
@@ -357,7 +959,6 @@ def html_output(result, options, *_):
 def _get_function_code(file_path, start_line, end_line):
     """Чтение кода функции с поддержкой разных кодировок"""
     try:
-        # Пробуем разные кодировки
         encodings = ['utf-8', 'cp1251', 'latin-1', 'iso-8859-1']
         
         for encoding in encodings:
@@ -368,7 +969,6 @@ def _get_function_code(file_path, start_line, end_line):
             except UnicodeDecodeError:
                 continue
         
-        # Fallback: бинарное чтение
         with open(file_path, 'rb') as f:
             binary_content = f.read()
             content = binary_content.decode('utf-8', errors='ignore')
@@ -380,36 +980,54 @@ def _get_function_code(file_path, start_line, end_line):
         return ""
     
 def _create_dict(source_function, file_path):
-    func_dict = {
-        'name': source_function.name,
-        'cyclomatic_complexity': source_function.cyclomatic_complexity,
-        'nloc': source_function.nloc,
-        'token_count': source_function.token_count,
-        'parameter_count': source_function.parameter_count,
-        'start_line': source_function.start_line,
-        'end_line': source_function.end_line
-    }
-    
-    # Получаем код функции
-    func_code = _get_function_code(file_path, source_function.start_line, source_function.end_line)
-    
-    if func_code:
-        # Используем прямое обращение к статическому методу
-        func_dict['max_depth'] = FileAnalyzer._calculate_block_depth_accurate(func_code)
+    try:
+        func_dict = {
+            'name': source_function.name,
+            'cyclomatic_complexity': getattr(source_function, 'cyclomatic_complexity', 0),
+            'nloc': getattr(source_function, 'nloc', 0),
+            'token_count': getattr(source_function, 'token_count', 0),
+            'parameter_count': getattr(source_function, 'parameter_count', 0),
+            'start_line': getattr(source_function, 'start_line', 0),
+            'end_line': getattr(source_function, 'end_line', 0)
+        }
         
-        # Проверяем сложные препроцессоры
-        parser_result = CodeParser.parse_c_like_code(func_code)
-        func_dict['has_complex_preprocessor'] = parser_result.get('has_complex_preprocessor', False)
-        func_dict['balanced_blocks'] = parser_result.get('balanced_blocks', False)
-    else:
-        func_dict['max_depth'] = 0
-        func_dict['has_complex_preprocessor'] = False
-        func_dict['balanced_blocks'] = True
+        func_code = _get_function_code(file_path, source_function.start_line, source_function.end_line)
         
-    # Проверяем, находится ли функция в disable-блоке
-    func_dict['in_disable_block'] = _is_in_disable_block(file_path, source_function.start_line, source_function.end_line)
+        if func_code:
+            try:
+                func_dict['max_depth'] = FileAnalyzer._calculate_block_depth_accurate(func_code)
+                parser_result = CodeParser.parse_c_like_code(func_code)
+                func_dict['has_complex_preprocessor'] = parser_result.get('has_complex_preprocessor', False)
+                func_dict['balanced_blocks'] = parser_result.get('balanced_blocks', False)
+            except Exception as e:
+                print(f"Warning: Failed to analyze function {source_function.name}: {str(e)}")
+                func_dict['max_depth'] = 0
+                func_dict['has_complex_preprocessor'] = True
+                func_dict['balanced_blocks'] = False
+        else:
+            func_dict['max_depth'] = 0
+            func_dict['has_complex_preprocessor'] = False
+            func_dict['balanced_blocks'] = True
+            
+        func_dict['in_disable_block'] = _is_in_disable_block(file_path, source_function.start_line, source_function.end_line)
+            
+        return func_dict
         
-    return func_dict
+    except Exception as e:
+        print(f"Error creating dict for function {source_function.name}: {str(e)}")
+        return {
+            'name': source_function.name,
+            'cyclomatic_complexity': getattr(source_function, 'cyclomatic_complexity', 0),
+            'nloc': getattr(source_function, 'nloc', 0),
+            'token_count': getattr(source_function, 'token_count', 0),
+            'parameter_count': getattr(source_function, 'parameter_count', 0),
+            'start_line': getattr(source_function, 'start_line', 0),
+            'end_line': getattr(source_function, 'end_line', 0),
+            'max_depth': 0,
+            'has_complex_preprocessor': True,
+            'balanced_blocks': False,
+            'in_disable_block': False
+        }
 
 def _is_in_disable_block(file_path, start_line, end_line):
     """Проверяет, находится ли функция между XLIZARD_DISABLE и XLIZARD_ENABLE"""
@@ -420,7 +1038,6 @@ def _is_in_disable_block(file_path, start_line, end_line):
         in_disable_block = False
         disable_start = 0
         
-        # Проверяем все строки до начала функции
         for i, line in enumerate(lines[:start_line], 1):
             if 'XLIZARD_DISABLE' in line:
                 in_disable_block = True
@@ -428,11 +1045,9 @@ def _is_in_disable_block(file_path, start_line, end_line):
             elif 'XLIZARD_ENABLE' in line and in_disable_block:
                 in_disable_block = False
                 
-        # Если функция начинается в disable-блоке, помечаем ее
         if in_disable_block:
             return True
             
-        # Проверяем, не начинается ли disable-блок внутри функции
         for i, line in enumerate(lines[start_line-1:end_line], start_line):
             if 'XLIZARD_DISABLE' in line:
                 return True
@@ -441,6 +1056,7 @@ def _is_in_disable_block(file_path, start_line, end_line):
         pass
         
     return False
+
 
 TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 "-//W3C//DTD HTML 4.01 Transitional//EN"

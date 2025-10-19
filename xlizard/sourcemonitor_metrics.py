@@ -94,34 +94,40 @@ class CodeParser:
     @staticmethod
     def has_complex_preprocessor(content: str) -> bool:
         """Проверяет наличие сложных препроцессорных директив в функции"""
-        lines = content.split('\n')
-        in_function = False
-        brace_count = 0
-        preprocessor_count = 0
-        
-        for line in lines:
-            stripped = line.strip()
+        try:
+            lines = content.split('\n')
+            in_function = False
+            brace_count = 0
+            preprocessor_count = 0
             
-            # Начало функции
-            if not in_function and re.match(r'^\w+\s+\w+\s*\([^)]*\)\s*\{', stripped):
-                in_function = True
-                brace_count = 1
-                continue
+            for line in lines:
+                stripped = line.strip()
                 
-            if in_function:
-                # Подсчет скобок
-                brace_count += stripped.count('{')
-                brace_count -= stripped.count('}')
-                
-                # Подсчет препроцессорных директив
-                if stripped.startswith('#if') or stripped.startswith('#elif') or stripped.startswith('#else'):
-                    preprocessor_count += 1
-                
-                # Конец функции
-                if brace_count == 0:
-                    break
-        
-        return preprocessor_count >= 2  # Считаем сложным если 2+ препроцессорных директив
+                # Начало функции
+                if not in_function and re.match(r'^\w+\s+\w+\s*\([^)]*\)\s*\{', stripped):
+                    in_function = True
+                    brace_count = 1
+                    continue
+                    
+                if in_function:
+                    # Подсчет скобок
+                    brace_count += stripped.count('{')
+                    brace_count -= stripped.count('}')
+                    
+                    # Подсчет препроцессорных директив (только условные)
+                    if (stripped.startswith('#if') or 
+                        stripped.startswith('#elif') or 
+                        stripped.startswith('#else') or
+                        stripped.startswith('#endif')):
+                        preprocessor_count += 1
+                    
+                    # Конец функции
+                    if brace_count == 0:
+                        break
+            
+            return preprocessor_count >= 2  # Считаем сложным если 2+ препроцессорных директив
+        except Exception:
+            return False  # В случае ошибки считаем что препроцессоров нет
     
     @staticmethod
     def parse_c_like_code(content: str) -> Dict[str, Any]:
