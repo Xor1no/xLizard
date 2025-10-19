@@ -1,7 +1,7 @@
 # xLizard - Extended Cyclomatic Complexity Analyzer
 
 ![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
-![License](https://img.shields.io/badge/license-Proprietary-red.svg)
+![License](https://img.shields.io/badge/license-MIT-red.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 ![Python](https://img.shields.io/badge/python-3.7%2B-green.svg)
 
